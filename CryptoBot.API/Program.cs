@@ -1,6 +1,8 @@
 using CryptoBot.API.Settings;
 using CryptoBot.Exchanges.Exchanges.Clients;
+using CryptoBot.TelegramBot.Classes;
 using CryptoExchange.Net.Authentication;
+using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +26,13 @@ builder.Services.AddBybit(options =>
 
 builder.Services.AddTransient<BybitApiClient>();
 
+builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(builder.Configuration["TelegramBotConfiguration:TelegramBotToken"]!));
+builder.Services.AddSingleton<TelegramBot>();
+
 var app = builder.Build();
+
+var bot = app.Services.GetRequiredService<TelegramBot>();
+await bot.StartReceivingMessagesAsync();
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,7 +1,5 @@
 ﻿using Bybit.Net.Enums;
 using Bybit.Net.Interfaces.Clients;
-using Bybit.Net.Interfaces.Clients.V5;
-using CryptoExchange.Net.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoBot.Exchanges.Exchanges.Clients
