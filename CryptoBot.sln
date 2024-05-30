@@ -5,6 +5,10 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoBot.API", "CryptoBot.API\CryptoBot.API.csproj", "{38E9DE90-7A15-4437-AB23-4D6AC7272DA3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoBot.TelegramBot", "CryptoBot.TelegramBot\CryptoBot.TelegramBot.csproj", "{31FBF15D-E2BB-4B8F-A821-B00253BAE87A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoBot.Exchanges", "CryptoBot.Exchanges\CryptoBot.Exchanges.csproj", "{2F9CB270-CA5F-4BF6-8FE1-DB49F4689118}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{38E9DE90-7A15-4437-AB23-4D6AC7272DA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38E9DE90-7A15-4437-AB23-4D6AC7272DA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38E9DE90-7A15-4437-AB23-4D6AC7272DA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31FBF15D-E2BB-4B8F-A821-B00253BAE87A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31FBF15D-E2BB-4B8F-A821-B00253BAE87A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31FBF15D-E2BB-4B8F-A821-B00253BAE87A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31FBF15D-E2BB-4B8F-A821-B00253BAE87A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F9CB270-CA5F-4BF6-8FE1-DB49F4689118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F9CB270-CA5F-4BF6-8FE1-DB49F4689118}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F9CB270-CA5F-4BF6-8FE1-DB49F4689118}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F9CB270-CA5F-4BF6-8FE1-DB49F4689118}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

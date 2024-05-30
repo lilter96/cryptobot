@@ -398,3 +398,9 @@ FodyWeavers.xsd
 *.sln.iml
 
 .idea
+
+**/appsettings.Development.json
+/appsettings.Development.json
+
+**/**/obj
+**/.idea
