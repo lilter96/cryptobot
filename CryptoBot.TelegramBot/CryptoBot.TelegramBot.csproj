@@ -16,8 +16,4 @@
       <ProjectReference Include="..\CryptoBot.Exchanges\CryptoBot.Exchanges.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="CommandHandlers\" />
-    </ItemGroup>
-
 </Project>

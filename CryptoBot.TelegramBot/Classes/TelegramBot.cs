@@ -88,8 +88,6 @@ public class TelegramBot
 
     public async Task SendDefaultMessageAsync(string text, long chatId)
     {
-        await _botClient.SendTextMessageAsync(
-            chatId: chatId,
-            text: text);
+        await _botClient.SendTextMessageAsync(chatId, text);
     }
 }

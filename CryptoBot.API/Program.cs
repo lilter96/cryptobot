@@ -1,9 +1,11 @@
 using CryptoBot.API.Settings;
+using CryptoBot.Data;
 using CryptoBot.Exchanges.Exchanges.Clients;
 using CryptoBot.TelegramBot;
 using CryptoBot.TelegramBot.Classes;
 using CryptoBot.TelegramBot.CommandDetectors;
 using CryptoExchange.Net.Authentication;
+using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +13,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<CryptoBotDbContext>(opt => opt.UseSqlServer(connectionString));
 
 var configuration = builder.Configuration;
 
@@ -55,9 +61,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
