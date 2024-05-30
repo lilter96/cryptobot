@@ -4,7 +4,6 @@
         <TargetFramework>net8.0</TargetFramework>
         <LangVersion>preview</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,6 +14,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\CryptoBot.Exchanges\CryptoBot.Exchanges.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="CommandHandlers\" />
     </ItemGroup>
 
 </Project>

@@ -1,7 +1,4 @@
-﻿using System.Globalization;
-using CryptoBot.Exchanges.Exchanges.Clients;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -12,14 +9,15 @@ namespace CryptoBot.TelegramBot.Classes;
 public class TelegramBot
 {
     private readonly ITelegramBotClient _botClient;
-    private readonly BybitApiClient _bybitApiClient;
     private readonly ILogger<TelegramBot> _logger;
+    private readonly CommandDetectorService _commandDetectorService;
+    public readonly List<BotCommand> LastBotsCommands = [];
 
-    public TelegramBot(ITelegramBotClient botClient, ILogger<TelegramBot> logger, BybitApiClient bybitApiClient)
+    public TelegramBot(ITelegramBotClient botClient, ILogger<TelegramBot> logger, CommandDetectorService commandDetectorService)
     {
         _botClient = botClient;
         _logger = logger;
-        _bybitApiClient = bybitApiClient;
+        _commandDetectorService = commandDetectorService;
     }
 
     public Task StartReceivingMessagesAsync()
@@ -65,26 +63,14 @@ public class TelegramBot
             // ignored
         }
 
-        var message = string.Empty;
-        
-        switch (update.Message?.Text)
+        var botCommand = await _commandDetectorService.DetectCommand(update, this);
+
+        if (botCommand == null)
         {
-            case "/start":
-                message = "Hello!";
-                break;
-            case "BTCUSDT":
-                var response = await _bybitApiClient.GetLastTradedPrice(update.Message.Text.ToUpper());
-                message = response.ToString(CultureInfo.InvariantCulture);
-                break;
-            default:
-                message = "aboba";
-                break;
+            return;
         }
-        
-        await botClient.SendTextMessageAsync(
-            chatId: update.Message.Chat.Id,
-            text: message,
-            cancellationToken: cancellationToken);
+
+        LastBotsCommands.Add(botCommand.Value);
     }
 
     private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception,
@@ -98,5 +84,12 @@ public class TelegramBot
         };
 
         return Task.CompletedTask;
+    }
+
+    public async Task SendDefaultMessageAsync(string text, long chatId)
+    {
+        await _botClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: text);
     }
 }

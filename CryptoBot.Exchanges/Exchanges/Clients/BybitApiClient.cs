@@ -25,6 +25,8 @@ namespace CryptoBot.Exchanges.Exchanges.Clients
             {
                 _logger.LogError(
                     $"Something went wrong while receiving Last Traded Price for symbol {symbol}. Error Message: {result.Error.Message}");
+
+                throw new Exception();
             }
 
             return result.Data.List.Last().ClosePrice;

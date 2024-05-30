@@ -1,6 +1,8 @@
 using CryptoBot.API.Settings;
 using CryptoBot.Exchanges.Exchanges.Clients;
+using CryptoBot.TelegramBot;
 using CryptoBot.TelegramBot.Classes;
+using CryptoBot.TelegramBot.CommandDetectors;
 using CryptoExchange.Net.Authentication;
 using Telegram.Bot;
 
@@ -25,9 +27,21 @@ builder.Services.AddBybit(options =>
 });
 
 builder.Services.AddTransient<BybitApiClient>();
+builder.Services.AddSingleton<CommandDetectorService>();
 
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(builder.Configuration["TelegramBotConfiguration:TelegramBotToken"]!));
 builder.Services.AddSingleton<TelegramBot>();
+
+
+var detectorsTypes = AppDomain.CurrentDomain.GetAssemblies()
+    .SelectMany(s => s.GetTypes())
+    .Where(x => !x.IsInterface && x.IsAssignableTo(typeof(ICommandDetector)))
+    .ToList();
+
+foreach (var detector in detectorsTypes)
+{
+    builder.Services.AddSingleton(detector);
+}
 
 var app = builder.Build();
 
