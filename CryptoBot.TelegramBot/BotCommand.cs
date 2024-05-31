@@ -2,9 +2,10 @@
 {
     public enum BotCommand
     {
-        Start,
-        Price,
+        Idle,
+        GetLastTradedPriceOfSymbol,
         Account,
-        ReadSymbol
+        ReadSymbol,
+        Help
     }
 }

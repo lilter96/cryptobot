@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CryptoBot.TelegramBot.BotStates;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -11,7 +12,9 @@ public class TelegramBot
     private readonly ITelegramBotClient _botClient;
     private readonly ILogger<TelegramBot> _logger;
     private readonly CommandDetectorService _commandDetectorService;
-    public readonly List<BotCommand> LastBotsCommands = [];
+    private readonly List<BotCommand> LastBotsCommands = [];
+
+    private IBotState _currentBotState;
 
     public TelegramBot(ITelegramBotClient botClient, ILogger<TelegramBot> logger, CommandDetectorService commandDetectorService)
     {
@@ -22,6 +25,7 @@ public class TelegramBot
 
     public Task StartReceivingMessagesAsync()
     {
+        _currentBotState = new WaitingForCommandState(_commandDetectorService);
         ReceiverOptions receiverOptions = new()
         {
             AllowedUpdates = []
@@ -63,14 +67,14 @@ public class TelegramBot
             // ignored
         }
 
-        var botCommand = await _commandDetectorService.DetectCommand(update, this);
+        var newBotState = await _currentBotState.HandleUpdateAsync(update, this);
 
-        if (botCommand == null)
+        _currentBotState = newBotState ?? _currentBotState;
+
+        if (newBotState?.Command != null)
         {
-            return;
+            LastBotsCommands.Add(newBotState.Command.Value);
         }
-
-        LastBotsCommands.Add(botCommand.Value);
     }
 
     private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception,

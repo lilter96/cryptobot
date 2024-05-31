@@ -3,11 +3,11 @@ using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.CommandDetectors
 {
-    public class PriceCommandDetector : ICommandDetector
+    public class HelpCommandDetector : ICommandDetector
     {
         private readonly IStateFactory _stateFactory;
 
-        public PriceCommandDetector(IStateFactory stateFactory)
+        public HelpCommandDetector(IStateFactory stateFactory)
         {
             _stateFactory = stateFactory;
         }

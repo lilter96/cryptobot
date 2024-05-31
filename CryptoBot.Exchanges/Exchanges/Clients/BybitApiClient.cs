@@ -23,10 +23,11 @@ namespace CryptoBot.Exchanges.Exchanges.Clients
 
             if (result.Error != null)
             {
-                _logger.LogError(
-                    $"Something went wrong while receiving Last Traded Price for symbol {symbol}. Error Message: {result.Error.Message}");
+                var errorMessage =
+                    $"Something went wrong while receiving Last Traded Price for symbol {symbol}. Error Message: {result.Error.Message}";
+                _logger.LogError(errorMessage);
 
-                throw new Exception();
+                throw new InvalidOperationException(errorMessage);
             }
 
             return result.Data.List.Last().ClosePrice;

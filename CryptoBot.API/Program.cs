@@ -2,6 +2,7 @@ using CryptoBot.API.Settings;
 using CryptoBot.Data;
 using CryptoBot.Exchanges.Exchanges.Clients;
 using CryptoBot.TelegramBot;
+using CryptoBot.TelegramBot.BotStates;
 using CryptoBot.TelegramBot.Classes;
 using CryptoBot.TelegramBot.CommandDetectors;
 using CryptoExchange.Net.Authentication;
@@ -48,6 +49,18 @@ foreach (var detector in detectorsTypes)
 {
     builder.Services.AddSingleton(detector);
 }
+
+var states = AppDomain.CurrentDomain.GetAssemblies()
+    .SelectMany(s => s.GetTypes())
+    .Where(x => !x.IsInterface && x.IsAssignableTo(typeof(IBotState)))
+    .ToList();
+
+foreach (var botState in states)
+{
+    builder.Services.AddSingleton(botState);
+}
+
+builder.Services.AddSingleton<IStateFactory, StateFactory>();
 
 var app = builder.Build();
 
