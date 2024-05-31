@@ -8,10 +8,12 @@ namespace CryptoBot.API.Controllers
     public class ExchangeController : ControllerBase
     {
         private readonly BybitApiClient _bybitApiClient;
+        private readonly TelegramBot.TelegramBot _telegramBot;
 
-        public ExchangeController(BybitApiClient bybitApiClient)
+        public ExchangeController(BybitApiClient bybitApiClient, TelegramBot.TelegramBot telegramBot)
         {
             _bybitApiClient = bybitApiClient;
+            _telegramBot = telegramBot;
         }
 
         [HttpGet]
@@ -21,6 +23,15 @@ namespace CryptoBot.API.Controllers
             var result = await _bybitApiClient.GetLastTradedPrice(symbol);
 
             return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("asd")]
+        public async Task<IActionResult> StartBot()
+        {
+            await _telegramBot.StartReceivingMessagesAsync();
+
+            return Ok();
         }
     }
 }

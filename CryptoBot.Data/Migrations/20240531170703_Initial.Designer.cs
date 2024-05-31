@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CryptoBot.Data.Migrations
 {
     [DbContext(typeof(CryptoBotDbContext))]
-    [Migration("20240530155900_Initial")]
+    [Migration("20240531170703_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -53,14 +53,14 @@ namespace CryptoBot.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ChatId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("BotState")
+                        .HasColumnType("int");
+
+                    b.Property<long>("ChatId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("LastCommand")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("ModificationDate")
                         .HasColumnType("datetime2");

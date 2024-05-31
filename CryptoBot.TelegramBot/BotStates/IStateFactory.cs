@@ -1,7 +1,9 @@
-﻿namespace CryptoBot.TelegramBot.BotStates
+﻿using CryptoBot.Data.Entities;
+
+namespace CryptoBot.TelegramBot.BotStates
 {
     public interface IStateFactory
     {
-        IBotState CreateState<T>() where T : IBotState;
+        IBotState CreateState(BotState state);
     }
 }

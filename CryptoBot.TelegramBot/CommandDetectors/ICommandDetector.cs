@@ -5,6 +5,6 @@ namespace CryptoBot.TelegramBot.CommandDetectors
 {
     public interface ICommandDetector
     {
-        Task<IBotState> TryDetectCommand(Update receivedUpdate, Classes.TelegramBot telegramBot);
+        Task<IBotState> TryDetectCommand(Update receivedUpdate, TelegramBot telegramBot);
     }
 }

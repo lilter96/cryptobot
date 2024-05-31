@@ -1,4 +1,5 @@
-﻿using CryptoBot.TelegramBot.BotStates;
+﻿using CryptoBot.Data.Entities;
+using CryptoBot.TelegramBot.BotStates;
 using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.CommandDetectors
@@ -12,7 +13,7 @@ namespace CryptoBot.TelegramBot.CommandDetectors
             _stateFactory = stateFactory;
         }
 
-        public async Task<IBotState> TryDetectCommand(Update receivedUpdate, Classes.TelegramBot telegramBot)
+        public async Task<IBotState> TryDetectCommand(Update receivedUpdate, TelegramBot telegramBot)
         {
             var receivedTelegramMessage = receivedUpdate.Message;
 
@@ -30,7 +31,7 @@ namespace CryptoBot.TelegramBot.CommandDetectors
             {
                 await telegramBot.SendDefaultMessageAsync("Выберите криптовалютную пару!", chatId);
 
-                return _stateFactory.CreateState<WaitingForSymbolState>();
+                return _stateFactory.CreateState(BotState.WaitingForSymbol);
             }
 
             return null;

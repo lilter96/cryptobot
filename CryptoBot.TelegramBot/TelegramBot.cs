@@ -1,31 +1,31 @@
-﻿using CryptoBot.TelegramBot.BotStates;
+﻿using CryptoBot.Data;
+using CryptoBot.Data.Entities;
+using CryptoBot.TelegramBot.BotStates;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 
-namespace CryptoBot.TelegramBot.Classes;
+namespace CryptoBot.TelegramBot;
 
 public class TelegramBot
 {
     private readonly ITelegramBotClient _botClient;
     private readonly ILogger<TelegramBot> _logger;
-    private readonly CommandDetectorService _commandDetectorService;
-    private readonly List<BotCommand> LastBotsCommands = [];
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    private IBotState _currentBotState;
-
-    public TelegramBot(ITelegramBotClient botClient, ILogger<TelegramBot> logger, CommandDetectorService commandDetectorService)
+    public TelegramBot(ITelegramBotClient botClient, ILogger<TelegramBot> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _botClient = botClient;
         _logger = logger;
-        _commandDetectorService = commandDetectorService;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public Task StartReceivingMessagesAsync()
     {
-        _currentBotState = new WaitingForCommandState(_commandDetectorService);
         ReceiverOptions receiverOptions = new()
         {
             AllowedUpdates = []
@@ -48,8 +48,40 @@ public class TelegramBot
         return Task.CompletedTask;
     }
 
-    async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
+        using var scope = _serviceScopeFactory.CreateScope();
+        var botDbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
+        var stateFactory = scope.ServiceProvider.GetRequiredService<IStateFactory>();
+
+        var chatId = update.GetChatId();
+
+        var isChatNotExist = update?.Message?.Text == "/start" &&
+                          await botDbContext.Chats.AllAsync(x => x.ChatId != chatId,
+                              cancellationToken: cancellationToken);
+
+        if (isChatNotExist)
+        {
+            await botDbContext.AddAsync(new ChatEntity
+            {
+                BotState = BotState.WaitingForCommand,
+                Accounts = [],
+                ChatId = chatId
+            }, cancellationToken);
+
+            await botDbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var chat = await botDbContext.Chats.FirstOrDefaultAsync(x => x.ChatId == chatId, cancellationToken: cancellationToken);
+
+        if (chat == null)
+        {
+            await SendDefaultMessageAsync("Для начала работы введите команду /start", chatId);
+            return;
+        }
+
+        var currentBotState = stateFactory.CreateState(chat.BotState);
+
         try
         {
             if (update.Message != null)
@@ -67,14 +99,14 @@ public class TelegramBot
             // ignored
         }
 
-        var newBotState = await _currentBotState.HandleUpdateAsync(update, this);
+        var newBotState = await currentBotState.HandleUpdateAsync(update, this);
 
-        _currentBotState = newBotState ?? _currentBotState;
+        currentBotState = newBotState ?? currentBotState;
 
-        if (newBotState?.Command != null)
-        {
-            LastBotsCommands.Add(newBotState.Command.Value);
-        }
+        chat.BotState = currentBotState.BotState;
+
+        botDbContext.Chats.Update(chat);
+        await botDbContext.SaveChangesAsync(cancellationToken);
     }
 
     private static Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception,

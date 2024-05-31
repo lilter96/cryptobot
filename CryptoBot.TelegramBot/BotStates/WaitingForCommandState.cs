@@ -1,4 +1,6 @@
-﻿using Telegram.Bot.Types;
+﻿using CryptoBot.Data.Entities;
+using CryptoBot.TelegramBot.CommandDetectors;
+using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.BotStates
 {
@@ -11,9 +13,10 @@ namespace CryptoBot.TelegramBot.BotStates
             _commandDetectorService = commandDetectorService;
         }
 
-        public BotCommand? Command { get; set; } = null;
 
-        public async Task<IBotState> HandleUpdateAsync(Update update, Classes.TelegramBot telegramBot)
+        public BotState BotState { get; set; } = BotState.WaitingForCommand;
+
+        public async Task<IBotState> HandleUpdateAsync(Update update, TelegramBot telegramBot)
         {
             var possibleNewBotState = await _commandDetectorService.DetectCommand(update, telegramBot);
 

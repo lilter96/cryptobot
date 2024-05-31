@@ -18,8 +18,8 @@ namespace CryptoBot.Data.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModificationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ChatId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    LastCommand = table.Column<int>(type: "int", nullable: false)
+                    ChatId = table.Column<long>(type: "bigint", nullable: false),
+                    BotState = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

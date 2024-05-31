@@ -1,13 +1,12 @@
 ﻿using CryptoBot.TelegramBot.BotStates;
-using CryptoBot.TelegramBot.CommandDetectors;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 
-namespace CryptoBot.TelegramBot
+namespace CryptoBot.TelegramBot.CommandDetectors
 {
     public class CommandDetectorService
     {
-        private readonly List<Func<Update, Classes.TelegramBot, Task<IBotState>>> _allDetectors = [];
+        private readonly List<Func<Update, TelegramBot, Task<IBotState>>> _allDetectors = [];
 
         public CommandDetectorService(IServiceScopeFactory serviceScopeFactory)
         {
@@ -29,7 +28,7 @@ namespace CryptoBot.TelegramBot
             }
         }
 
-        public async Task<IBotState> DetectCommand(Update update, Classes.TelegramBot telegramBot)
+        public async Task<IBotState> DetectCommand(Update update, TelegramBot telegramBot)
         {
             foreach (var x in _allDetectors)
             {

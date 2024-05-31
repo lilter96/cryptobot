@@ -1,9 +1,9 @@
 using CryptoBot.API.Settings;
 using CryptoBot.Data;
+using CryptoBot.Data.Entities;
 using CryptoBot.Exchanges.Exchanges.Clients;
 using CryptoBot.TelegramBot;
 using CryptoBot.TelegramBot.BotStates;
-using CryptoBot.TelegramBot.Classes;
 using CryptoBot.TelegramBot.CommandDetectors;
 using CryptoExchange.Net.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +37,7 @@ builder.Services.AddTransient<BybitApiClient>();
 builder.Services.AddSingleton<CommandDetectorService>();
 
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(builder.Configuration["TelegramBotConfiguration:TelegramBotToken"]!));
-builder.Services.AddSingleton<TelegramBot>();
+builder.Services.AddTransient<TelegramBot>();
 
 
 var detectorsTypes = AppDomain.CurrentDomain.GetAssemblies()
@@ -47,25 +47,25 @@ var detectorsTypes = AppDomain.CurrentDomain.GetAssemblies()
 
 foreach (var detector in detectorsTypes)
 {
-    builder.Services.AddSingleton(detector);
+    builder.Services.AddTransient(detector);
 }
 
-var states = AppDomain.CurrentDomain.GetAssemblies()
-    .SelectMany(s => s.GetTypes())
-    .Where(x => !x.IsInterface && x.IsAssignableTo(typeof(IBotState)))
-    .ToList();
+// var states = AppDomain.CurrentDomain.GetAssemblies()
+//     .SelectMany(s => s.GetTypes())
+//     .Where(x => !x.IsInterface && x.IsAssignableTo(typeof(IBotState)))
+//     .ToList();
+//
+// foreach (var botState in states)
+// {
+//     builder.Services.AddSingleton(botState);
+// }
 
-foreach (var botState in states)
-{
-    builder.Services.AddSingleton(botState);
-}
+builder.Services.AddKeyedTransient<IBotState, WaitingForCommandState>(BotState.WaitingForCommand);
+builder.Services.AddKeyedTransient<IBotState, WaitingForSymbolState>(BotState.WaitingForSymbol);
 
-builder.Services.AddSingleton<IStateFactory, StateFactory>();
+builder.Services.AddTransient<IStateFactory, StateFactory>();
 
 var app = builder.Build();
-
-var bot = app.Services.GetRequiredService<TelegramBot>();
-await bot.StartReceivingMessagesAsync();
 
 if (app.Environment.IsDevelopment())
 {
