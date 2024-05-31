@@ -2,6 +2,8 @@ using CryptoBot.API.Settings;
 using CryptoBot.Data;
 using CryptoBot.Data.Entities;
 using CryptoBot.Exchanges.Exchanges.Clients;
+using CryptoBot.Service.Services.Implementations;
+using CryptoBot.Service.Services.Interfaces;
 using CryptoBot.TelegramBot;
 using CryptoBot.TelegramBot.BotStates;
 using CryptoBot.TelegramBot.CommandDetectors;
@@ -37,7 +39,6 @@ builder.Services.AddSingleton<CommandDetectorService>();
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(builder.Configuration["TelegramBotConfiguration:TelegramBotToken"]!));
 builder.Services.AddTransient<TelegramBot>();
 
-
 var detectorsTypes = AppDomain.CurrentDomain.GetAssemblies()
     .SelectMany(s => s.GetTypes())
     .Where(x => !x.IsInterface && x.IsAssignableTo(typeof(ICommandDetector)))
@@ -62,6 +63,7 @@ builder.Services.AddKeyedTransient<IBotState, WaitingForCommandState>(BotState.W
 builder.Services.AddKeyedTransient<IBotState, WaitingForSymbolState>(BotState.WaitingForSymbol);
 
 builder.Services.AddTransient<IStateFactory, StateFactory>();
+builder.Services.AddTransient<ICryptoService, CryptoService>();
 
 var app = builder.Build();
 
