@@ -1,8 +1,7 @@
-﻿namespace CryptoBot.Exchanges.Exchanges
+﻿namespace CryptoBot.Exchanges.Exchanges;
+
+public enum Exchange
 {
-    public enum Exchange
-    {
-        Bybit,
-        Binance,
-    }
+    Bybit,
+    Binance,
 }

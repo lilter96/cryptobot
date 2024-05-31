@@ -1,8 +1,7 @@
-﻿namespace CryptoBot.Data.Entities
+﻿namespace CryptoBot.Data.Entities;
+
+public enum BotState
 {
-    public enum BotState
-    {
-        WaitingForCommand,
-        WaitingForSymbol
-    }
+    WaitingForCommand,
+    WaitingForSymbol
 }

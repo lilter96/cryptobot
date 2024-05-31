@@ -19,8 +19,6 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<CryptoBotDbContext>(opt => opt.UseSqlServer(connectionString));
 
-var configuration = builder.Configuration;
-
 var bybitApiSettings = builder.Configuration.GetSection("BybitApiCredentials").Get<BybitApiSettings>();
 
 if (bybitApiSettings == null)

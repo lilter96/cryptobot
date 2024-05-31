@@ -1,12 +1,11 @@
 ﻿using CryptoBot.Data.Entities;
 using Telegram.Bot.Types;
 
-namespace CryptoBot.TelegramBot.BotStates
-{
-    public interface IBotState
-    {
-        public BotState BotState { get; set; }
+namespace CryptoBot.TelegramBot.BotStates;
 
-        Task<IBotState> HandleUpdateAsync(Update update, TelegramBot telegramBot);
-    }
+public interface IBotState
+{
+    public BotState BotState { get; set; }
+
+    Task<IBotState> HandleUpdateAsync(Update update);
 }

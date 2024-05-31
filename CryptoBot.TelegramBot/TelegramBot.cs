@@ -99,7 +99,7 @@ public class TelegramBot
             // ignored
         }
 
-        var newBotState = await currentBotState.HandleUpdateAsync(update, this);
+        var newBotState = await currentBotState.HandleUpdateAsync(update);
 
         currentBotState = newBotState ?? currentBotState;
 
@@ -124,6 +124,9 @@ public class TelegramBot
 
     public async Task SendDefaultMessageAsync(string text, long chatId)
     {
-        await _botClient.SendTextMessageAsync(chatId, text);
+        using var scope = _serviceScopeFactory.CreateScope();
+        var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
+        
+        await botClient.SendTextMessageAsync(chatId, text);
     }
 }

@@ -1,9 +1,8 @@
 ﻿using CryptoBot.Data.Entities;
 
-namespace CryptoBot.TelegramBot.BotStates
+namespace CryptoBot.TelegramBot.BotStates;
+
+public interface IStateFactory
 {
-    public interface IStateFactory
-    {
-        IBotState CreateState(BotState state);
-    }
+    IBotState CreateState(BotState state);
 }
