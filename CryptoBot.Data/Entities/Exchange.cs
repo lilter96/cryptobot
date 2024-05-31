@@ -1,4 +1,4 @@
-﻿namespace CryptoBot.Exchanges.Exchanges;
+﻿namespace CryptoBot.Data.Entities;
 
 public enum Exchange
 {

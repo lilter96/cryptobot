@@ -12,5 +12,9 @@ public class ChatEntity : IEntity
 
     public BotState BotState { get; set; }
 
+    public Guid? SelectedAccountId { get; set; }
+
     public virtual IList<AccountEntity> Accounts { get; init; }
+
+    public virtual AccountEntity SelectedAccount { get; set; }
 }

@@ -3,5 +3,8 @@
 public enum BotState
 {
     WaitingForCommand,
-    WaitingForSymbol
+    WaitingForSymbol,
+    WaitingForSelectingExchange,
+    WaitingForExchangeApiKeyState,
+    WaitingForExchangeApiSecretState,
 }

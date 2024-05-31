@@ -1,5 +1,10 @@
-﻿using CryptoBot.Data.Entities;
+﻿using CryptoBot.Data;
+using CryptoBot.Data.Entities;
 using CryptoBot.Exchanges.Exchanges.Clients;
+using CryptoBot.Service.Services.Interfaces;
+using CryptoExchange.Net.Authentication;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 
@@ -11,13 +16,17 @@ public class WaitingForSymbolState : IBotState
     private readonly IStateFactory _stateFactory;
     private readonly ILogger<WaitingForSymbolState> _logger;
     private readonly TelegramBot _telegramBot;
-    
-    public WaitingForSymbolState(BybitApiClient bybitApiClient, IStateFactory stateFactory, ILogger<WaitingForSymbolState> logger, TelegramBot telegramBot)
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ICryptoService _cryptoService;
+
+    public WaitingForSymbolState(BybitApiClient bybitApiClient, IStateFactory stateFactory, ILogger<WaitingForSymbolState> logger, TelegramBot telegramBot, IServiceScopeFactory serviceScopeFactory, ICryptoService cryptoService)
     {
         _bybitApiClient = bybitApiClient;
         _stateFactory = stateFactory;
         _logger = logger;
         _telegramBot = telegramBot;
+        _serviceScopeFactory = serviceScopeFactory;
+        _cryptoService = cryptoService;
     }
 
     public BotState BotState { get; set; } = BotState.WaitingForSymbol;
@@ -37,7 +46,25 @@ public class WaitingForSymbolState : IBotState
 
         try
         {
-            var result = await _bybitApiClient.GetLastTradedPrice(message);
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
+
+            var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
+
+            var chat = await dbContext.Chats.Include(chatEntity => chatEntity.SelectedAccount)
+                .ThenInclude(accountEntity => accountEntity.Exchange).FirstOrDefaultAsync(x => x.ChatId == chatId);
+
+            if (chat.SelectedAccountId == null)
+            {
+                await _telegramBot.SendDefaultMessageAsync($"Не возможно просмотреть цену, вы не подключили ни одного аккаунта, либо не выбрали аккаунт", chatId);
+                return _stateFactory.CreateState(BotState.WaitingForCommand);
+            }
+
+            var decryptedKey = await _cryptoService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
+            var decryptedSecret = await _cryptoService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedSecret);
+
+            var apiCredentials = new ApiCredentials(decryptedKey, decryptedSecret);
+
+            var result = await _bybitApiClient.GetLastTradedPrice(apiCredentials, message);
             await _telegramBot.SendDefaultMessageAsync($"Последняя цена - {result}", chatId);
             return _stateFactory.CreateState(BotState.WaitingForCommand);
         }

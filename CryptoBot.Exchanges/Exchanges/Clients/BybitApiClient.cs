@@ -1,25 +1,30 @@
-﻿using Bybit.Net.Enums;
-using Bybit.Net.Interfaces.Clients;
+﻿using Bybit.Net.Clients;
+using Bybit.Net.Enums;
+using CryptoExchange.Net.Authentication;
 using Microsoft.Extensions.Logging;
 
 namespace CryptoBot.Exchanges.Exchanges.Clients;
 
 public class BybitApiClient
 {
-    private readonly IBybitRestClient _restApiClient;
     private readonly ILogger<BybitApiClient> _logger;
 
-    public BybitApiClient(IBybitRestClient restApiClient, ILogger<BybitApiClient> logger)
+    public BybitApiClient(
+        ILogger<BybitApiClient> logger)
     {
-        _restApiClient = restApiClient;
         _logger = logger;
     }
 
-    public async Task<decimal> GetLastTradedPrice(string symbol)
+    public async Task<decimal> GetLastTradedPrice(ApiCredentials apiCredentials, string symbol)
     {
+        var restApiClient = new BybitRestClient(options =>
+        {
+            options.ApiCredentials = apiCredentials;
+        });
+
         var date = DateTime.UtcNow;
 
-        var result = await _restApiClient.V5Api.ExchangeData.GetKlinesAsync(Category.Spot, symbol.ToUpper(), KlineInterval.FiveMinutes, date);
+        var result = await restApiClient.V5Api.ExchangeData.GetKlinesAsync(Category.Spot, symbol.ToUpper(), KlineInterval.FiveMinutes, date);
 
         if (result.Error != null)
         {

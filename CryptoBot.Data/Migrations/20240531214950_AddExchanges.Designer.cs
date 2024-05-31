@@ -4,6 +4,7 @@ using CryptoBot.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CryptoBot.Data.Migrations
 {
     [DbContext(typeof(CryptoBotDbContext))]
-    partial class CryptoBotDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240531214950_AddExchanges")]
+    partial class AddExchanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -68,14 +71,13 @@ namespace CryptoBot.Data.Migrations
                     b.Property<DateTime>("ModificationDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("SelectedAccountId")
+                    b.Property<Guid>("SelectedAccountId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("SelectedAccountId")
-                        .IsUnique()
-                        .HasFilter("[SelectedAccountId] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("Chats");
                 });
@@ -133,7 +135,8 @@ namespace CryptoBot.Data.Migrations
                     b.HasOne("CryptoBot.Data.Entities.AccountEntity", "SelectedAccount")
                         .WithOne()
                         .HasForeignKey("CryptoBot.Data.Entities.ChatEntity", "SelectedAccountId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("SelectedAccount");
                 });

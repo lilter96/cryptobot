@@ -15,6 +15,7 @@
     <ItemGroup>
       <ProjectReference Include="..\CryptoBot.Data\CryptoBot.Data.csproj" />
       <ProjectReference Include="..\CryptoBot.Exchanges\CryptoBot.Exchanges.csproj" />
+      <ProjectReference Include="..\CryptoBot.Services\CryptoBot.Services.csproj" />
     </ItemGroup>
 
 </Project>
