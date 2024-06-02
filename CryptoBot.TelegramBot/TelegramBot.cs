@@ -1,6 +1,7 @@
 ﻿using CryptoBot.Data;
 using CryptoBot.Data.Entities;
 using CryptoBot.TelegramBot.BotStates;
+using CryptoBot.TelegramBot.CommandDetectors;
 using CryptoBot.TelegramBot.Keyboards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +36,7 @@ public class TelegramBot
 
         try
         {
-           // await BotClient.DeleteMyCommandsAsync(BotCommandScope.AllPrivateChats());
+            await BotClient.DeleteMyCommandsAsync(BotCommandScope.AllPrivateChats());
             await SetDefaultCommandsAsync();
 
             BotClient.StartReceiving(
@@ -150,23 +151,29 @@ public class TelegramBot
         return Task.CompletedTask;
     }
 
-    public async Task SendDefaultMessageAsync(string text, long chatId, ReplyKeyboardMarkup keyboard = null)
+    public async Task<Message> SendDefaultMessageAsync(string text, long chatId, ReplyKeyboardMarkup keyboard = null)
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
 
-        await botClient.SendTextMessageAsync(chatId, text, replyMarkup: keyboard);
+        return await botClient.SendTextMessageAsync(chatId, text, replyMarkup: keyboard);
     }
 
     private async Task SetDefaultCommandsAsync()
     {
+        using var scope = _serviceScopeFactory.CreateScope();
+
+        var commandDetectorService = scope.ServiceProvider.GetRequiredService<CommandDetectorService>();
+
         // Only lower case without symblos
-        var commands = new[]
-        {
-            new BotCommand { Command = "/start", Description = "Запустить бота" },
-            new BotCommand { Command = "/help", Description = "Показать вспомогательную информацию" },
-            new BotCommand { Command = "/addaccount", Description = "Добавить аккаунт" }
-        };
+        var commands = commandDetectorService
+            .AllCommands
+            .Select(x =>
+                new BotCommand
+                {
+                    Command = x.Command,
+                    Description = x.Description
+                });
 
         await BotClient.SetMyCommandsAsync(commands, BotCommandScope.AllPrivateChats());
     }

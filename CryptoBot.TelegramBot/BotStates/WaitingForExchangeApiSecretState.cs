@@ -75,6 +75,11 @@ namespace CryptoBot.TelegramBot.BotStates
 
                 await _telegramBot.SendDefaultMessageAsync(
                     $"Вы успешно добавили аккаунт биржи {chat.SelectedAccount.Exchange.Exchange}", chatId);
+
+                var message = await _telegramBot.SendDefaultMessageAsync(
+                    $"Текущий аккаунт: {chat.SelectedAccount.Exchange.Exchange.ToString()}, id: {chat.SelectedAccountId}", chatId);
+
+                await _telegramBot.BotClient.PinChatMessageAsync(chatId, message.MessageId, true);
             }
             catch (Exception ex)
             {

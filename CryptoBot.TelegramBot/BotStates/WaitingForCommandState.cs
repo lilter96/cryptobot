@@ -8,7 +8,7 @@ public class WaitingForCommandState : IBotState
 {
     private readonly CommandDetectorService _commandDetectorService;
     private readonly TelegramBot _telegramBot;
-        
+
     public WaitingForCommandState(CommandDetectorService commandDetectorService, TelegramBot telegramBot)
     {
         _commandDetectorService = commandDetectorService;

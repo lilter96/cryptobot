@@ -8,12 +8,15 @@ public class PriceCommandDetector : ICommandDetector
 {
     private readonly IStateFactory _stateFactory;
     private readonly TelegramBot _telegramBot;
-        
+
     public PriceCommandDetector(IStateFactory stateFactory, TelegramBot telegramBot)
     {
         _stateFactory = stateFactory;
         _telegramBot = telegramBot;
     }
+
+    public CommandDescription CommandDescription { get; } =
+        new() { Command = "/getprice", Description = "Получить текущую цену криптовалютной пары" };
 
     public async Task<IBotState> TryDetectCommand(Update receivedUpdate)
     {
@@ -29,7 +32,7 @@ public class PriceCommandDetector : ICommandDetector
 
         var text = receivedTelegramMessage.Text;
 
-        if (text == "/price")
+        if (text == CommandDescription.Command)
         {
             await _telegramBot.SendDefaultMessageAsync("Выберите криптовалютную пару!", chatId);
 

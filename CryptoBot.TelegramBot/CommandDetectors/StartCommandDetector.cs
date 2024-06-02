@@ -5,6 +5,9 @@ namespace CryptoBot.TelegramBot.CommandDetectors;
 
 public class StartCommandDetector : ICommandDetector
 {
+    public CommandDescription CommandDescription { get; } =
+        new() { Command = "/start", Description = "Запустить бота" };
+
     public async Task<IBotState> TryDetectCommand(Update receivedUpdate)
     {
         var chatId = receivedUpdate.GetChatId();
@@ -16,7 +19,7 @@ public class StartCommandDetector : ICommandDetector
 
         var message = receivedUpdate.Message.Text;
 
-        if (message == "/start")
+        if (message == CommandDescription.Command)
         {
 
         }

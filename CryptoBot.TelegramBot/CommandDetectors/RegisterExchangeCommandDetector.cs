@@ -18,6 +18,9 @@ namespace CryptoBot.TelegramBot.CommandDetectors
             _telegramBot = telegramBot;
         }
 
+        public CommandDescription CommandDescription { get; } =
+            new() { Command = "/addaccount", Description = "Добавить аккаунт биржи" };
+
         public async Task<IBotState> TryDetectCommand(Update receivedUpdate)
         {
             var receivedTelegramMessage = receivedUpdate.Message;
@@ -32,7 +35,7 @@ namespace CryptoBot.TelegramBot.CommandDetectors
 
             var text = receivedTelegramMessage.Text;
 
-            if (text != "/addaccount")
+            if (text != CommandDescription.Command)
             {
                 return null;
             }

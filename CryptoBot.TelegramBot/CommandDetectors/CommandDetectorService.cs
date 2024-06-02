@@ -8,6 +8,8 @@ public class CommandDetectorService
 {
     private readonly List<Func<Update, Task<IBotState>>> _allDetectors = [];
 
+    public readonly List<CommandDescription> AllCommands = [];
+
     public CommandDetectorService(IServiceScopeFactory serviceScopeFactory)
     {
         using var scope = serviceScopeFactory.CreateScope();
@@ -25,14 +27,16 @@ public class CommandDetectorService
             }
 
             _allDetectors.Add(detector.TryDetectCommand);
+            AllCommands.Add(detector.CommandDescription);
         }
     }
 
+
     public async Task<IBotState> DetectCommand(Update update)
     {
-        foreach (var x in _allDetectors)
+        foreach (var detectionFunc in _allDetectors)
         {
-            var possibleNewBotState = await x(update);
+            var possibleNewBotState = await detectionFunc(update);
             if (possibleNewBotState != null)
             {
                 return possibleNewBotState;
