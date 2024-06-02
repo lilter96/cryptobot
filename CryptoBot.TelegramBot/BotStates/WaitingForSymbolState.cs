@@ -68,7 +68,7 @@ public class WaitingForSymbolState : IBotState
             await _telegramBot.SendDefaultMessageAsync($"Последняя цена - {result}", chatId);
             return _stateFactory.CreateState(BotState.WaitingForCommand);
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
             await _telegramBot.SendDefaultMessageAsync($"Выбранная вами криптовалютная пара {message} не поддерживается", chatId);
             return this;

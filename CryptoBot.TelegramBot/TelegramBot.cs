@@ -1,6 +1,7 @@
 ﻿using CryptoBot.Data;
 using CryptoBot.Data.Entities;
 using CryptoBot.TelegramBot.BotStates;
+using CryptoBot.TelegramBot.Keyboards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -8,6 +9,7 @@ using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace CryptoBot.TelegramBot;
 
@@ -24,7 +26,7 @@ public class TelegramBot
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    public Task StartReceivingMessagesAsync()
+    public async Task StartReceivingMessagesAsync()
     {
         ReceiverOptions receiverOptions = new()
         {
@@ -33,6 +35,9 @@ public class TelegramBot
 
         try
         {
+           // await BotClient.DeleteMyCommandsAsync(BotCommandScope.AllPrivateChats());
+            await SetDefaultCommandsAsync();
+
             BotClient.StartReceiving(
                 updateHandler: HandleUpdateAsync,
                 pollingErrorHandler: HandlePollingErrorAsync,
@@ -45,7 +50,7 @@ public class TelegramBot
             _logger.LogError(e.Message);
         }
 
-        return Task.CompletedTask;
+        await Task.CompletedTask;
     }
 
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -74,6 +79,14 @@ public class TelegramBot
                 });
 
                 await botDbContext.SaveChangesAsync(cancellationToken);
+
+                var keyboard = TelegramKeyboards.GetDefaultKeyboard(true);
+
+                await botClient.SendTextMessageAsync(
+                    chatId,
+                    "Доброго времени суток, с вами БОТ КРИПТОПАМПИКС!",
+                    replyMarkup: keyboard,
+                    cancellationToken: cancellationToken);
             }
 
             var chat = await botDbContext.Chats.FirstOrDefaultAsync(x => x.Id == chatId,
@@ -137,11 +150,24 @@ public class TelegramBot
         return Task.CompletedTask;
     }
 
-    public async Task SendDefaultMessageAsync(string text, long chatId)
+    public async Task SendDefaultMessageAsync(string text, long chatId, ReplyKeyboardMarkup keyboard = null)
     {
         using var scope = _serviceScopeFactory.CreateScope();
         var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
 
-        await botClient.SendTextMessageAsync(chatId, text);
+        await botClient.SendTextMessageAsync(chatId, text, replyMarkup: keyboard);
+    }
+
+    private async Task SetDefaultCommandsAsync()
+    {
+        // Only lower case without symblos
+        var commands = new[]
+        {
+            new BotCommand { Command = "/start", Description = "Запустить бота" },
+            new BotCommand { Command = "/help", Description = "Показать вспомогательную информацию" },
+            new BotCommand { Command = "/addaccount", Description = "Добавить аккаунт" }
+        };
+
+        await BotClient.SetMyCommandsAsync(commands, BotCommandScope.AllPrivateChats());
     }
 }

@@ -1,5 +1,6 @@
 ﻿using CryptoBot.Data.Entities;
 using CryptoBot.TelegramBot.BotStates;
+using CryptoBot.TelegramBot.Keyboards;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -31,24 +32,17 @@ namespace CryptoBot.TelegramBot.CommandDetectors
 
             var text = receivedTelegramMessage.Text;
 
-            if (text != "/registerExchange")
+            if (text != "/addaccount")
             {
                 return null;
             }
 
-            // Buttons
-            var urlButton = new KeyboardButton("Bybit");
-            var urlButton2 = new KeyboardButton("Binance");
-
-            var buttons = new[] { urlButton, urlButton2 };
-
-            // Keyboard markup
-            var inline = new ReplyKeyboardMarkup(buttons);
+            var keyboard = TelegramKeyboards.GetExchangeSelectingKeyboard(true);
 
             await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId,
                 "Выберите биржу из списка!",
-                replyMarkup: inline);
+                replyMarkup: keyboard);
 
             return _stateFactory.CreateState(BotState.WaitingForSelectingExchange);
         }

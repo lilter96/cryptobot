@@ -20,7 +20,7 @@ namespace CryptoBot.TelegramBot.BotStates
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IStateFactory _stateFactory;
         private readonly BybitApiClient _bybitApiClient;
-        
+
         public WaitingForExchangeApiSecretState(ILogger<WaitingForExchangeApiSecretState> logger, TelegramBot telegramBot, ICryptoService cryptoService, IServiceScopeFactory serviceScopeFactory, IStateFactory stateFactory, BybitApiClient bybitApiClient)
         {
             _logger = logger;
@@ -62,21 +62,25 @@ namespace CryptoBot.TelegramBot.BotStates
             await dbContext.SaveChangesAsync();
 
             await _telegramBot.BotClient.DeleteMessageAsync(chatId, update.Message.MessageId);
-            await _telegramBot.SendDefaultMessageAsync("Сообщение с API секретом удалено в целях вашей безопасности!", chatId);
+            await _telegramBot.SendDefaultMessageAsync("Сообщение с API секретом удалено в целях вашей безопасности!",
+                chatId);
 
             var decryptedApiKey = await _cryptoService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
 
             var apiCredentials = new ApiCredentials(decryptedApiKey, apiSecret);
 
-            var result = await _bybitApiClient.GetAccountBalance(apiCredentials);
-
-            if (result == null)
+            try
             {
-                await _telegramBot.SendDefaultMessageAsync("Вы ввели некорректные данные от аккаунта, попробуйте еще раз!", chatId);
+                _ = await _bybitApiClient.GetLastTradedPrice(apiCredentials);
+
+                await _telegramBot.SendDefaultMessageAsync(
+                    $"Вы успешно добавили аккаунт биржи {chat.SelectedAccount.Exchange.Exchange}", chatId);
             }
-            
-            await _telegramBot.SendDefaultMessageAsync(
-                $"Вы успешно добавили аккаунт биржи {chat.SelectedAccount.Exchange.Exchange}", chatId);
+            catch (Exception ex)
+            {
+                await _telegramBot.SendDefaultMessageAsync(
+                    "Вы ввели некорректные данные от аккаунта, попробуйте еще раз!", chatId);
+            }
 
             return _stateFactory.CreateState(BotState.WaitingForCommand);
         }

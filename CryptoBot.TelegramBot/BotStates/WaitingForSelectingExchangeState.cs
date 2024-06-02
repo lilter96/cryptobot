@@ -1,9 +1,12 @@
 ﻿using CryptoBot.Data;
 using CryptoBot.Data.Entities;
+using CryptoBot.TelegramBot.Keyboards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Telegram.Bot;
 using Telegram.Bot.Types;
+using static System.String;
 
 namespace CryptoBot.TelegramBot.BotStates
 {
@@ -34,7 +37,7 @@ namespace CryptoBot.TelegramBot.BotStates
 
             var chatId = update.GetChatId();
 
-            if (string.IsNullOrWhiteSpace(message))
+            if (IsNullOrWhiteSpace(message))
             {
                 _logger.LogWarning("Empty message in update from Telegram");
                 await _telegramBot.SendDefaultMessageAsync("Некорректный ввод, попробуйте снова.", chatId);
@@ -92,7 +95,9 @@ namespace CryptoBot.TelegramBot.BotStates
                 await dbContext.SaveChangesAsync();
 
                 await _telegramBot.SendDefaultMessageAsync(
-                    "Введите секретный API ключ! ВНИМАНИЕ: используйте ключ только для чтения", chatId);
+                    "Введите секретный API ключ! ВНИМАНИЕ: используйте ключ только для чтения",
+                    chatId,
+                    TelegramKeyboards.GetEmptyKeyboard());
 
                 return _stateFactory.CreateState(BotState.WaitingForExchangeApiKeyState);
             }
