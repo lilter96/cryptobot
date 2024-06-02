@@ -55,7 +55,7 @@ namespace CryptoBot.TelegramBot.BotStates
             var chat = await dbContext.Chats
                 .Include(chatEntity => chatEntity.SelectedAccount)
                 .ThenInclude(x => x.Exchange)
-                .FirstOrDefaultAsync(x => x.ChatId == chatId);
+                .FirstOrDefaultAsync(x => x.Id == chatId);
 
             chat.SelectedAccount.Exchange.EncryptedKey = encryptedApiKey;
 

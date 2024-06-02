@@ -1,6 +1,6 @@
 ﻿namespace CryptoBot.Data.Entities
 {
-    public class ExchangeEntity : IEntity
+    public class ExchangeEntity : IEntity<Guid>
     {
         public Guid Id { get; init; }
 

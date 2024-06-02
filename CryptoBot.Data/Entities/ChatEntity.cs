@@ -1,14 +1,16 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace CryptoBot.Data.Entities;
 
-public class ChatEntity : IEntity
+public class ChatEntity : IEntity<long>
 {
-    public Guid Id { get; init; }
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
+    public long Id { get; init; }
 
     public DateTime CreatedDate { get; set; }
 
     public DateTime ModificationDate { get; set; }
-
-    public long ChatId { get; init; }
 
     public BotState BotState { get; set; }
 

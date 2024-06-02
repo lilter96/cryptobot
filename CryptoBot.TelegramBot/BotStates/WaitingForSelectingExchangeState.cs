@@ -55,7 +55,7 @@ namespace CryptoBot.TelegramBot.BotStates
 
                 var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
 
-                var chat = await dbContext.Chats.FirstOrDefaultAsync(x => x.ChatId == chatId);
+                var chat = await dbContext.Chats.FirstOrDefaultAsync(x => x.Id == chatId);
 
                 AccountEntity editedAccount;
                 if (chat.SelectedAccountId == null)

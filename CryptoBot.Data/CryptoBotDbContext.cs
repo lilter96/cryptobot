@@ -32,7 +32,8 @@ public class CryptoBotDbContext : DbContext
         modelBuilder.Entity<ExchangeEntity>()
             .HasOne(x => x.Account)
             .WithOne(x => x.Exchange)
-            .HasForeignKey<AccountEntity>(x => x.ExchangeId);
+            .HasForeignKey<AccountEntity>(x => x.ExchangeId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     public override int SaveChanges()
@@ -47,13 +48,18 @@ public class CryptoBotDbContext : DbContext
 
         foreach (var entry in added)
         {
-            if (entry is not IEntity entity)
-            {
-                continue;
-            }
+            var entityType = entry.GetType();
+            var entityInterfaces = entityType.GetInterfaces();
 
-            entity.CreatedDate = DateTime.UtcNow;
-            entity.ModificationDate = DateTime.UtcNow;
+            var entityInterface = entityInterfaces.FirstOrDefault(i =>
+                i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEntity<>));
+
+            if (entityInterface != null)
+            {
+                dynamic entity = entry;
+                entity.CreatedDate = DateTime.UtcNow;
+                entity.ModificationDate = DateTime.UtcNow;
+            }
         }
 
         var updated = ChangeTracker
@@ -64,14 +70,22 @@ public class CryptoBotDbContext : DbContext
 
         foreach (var entry in updated)
         {
-            if (entry is IEntity entity)
+            var entityType = entry.GetType();
+            var entityInterfaces = entityType.GetInterfaces();
+
+            var entityInterface = entityInterfaces.FirstOrDefault(i =>
+                i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEntity<>));
+
+            if (entityInterface != null)
             {
+                dynamic entity = entry;
                 entity.ModificationDate = DateTime.UtcNow;
             }
         }
 
         return base.SaveChanges();
     }
+
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     {

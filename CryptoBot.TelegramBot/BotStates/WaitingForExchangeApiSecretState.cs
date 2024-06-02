@@ -1,6 +1,7 @@
 ﻿using Bybit.Net.Clients;
 using CryptoBot.Data;
 using CryptoBot.Data.Entities;
+using CryptoBot.Exchanges.Exchanges.Clients;
 using CryptoBot.Service.Services.Interfaces;
 using CryptoExchange.Net.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -18,14 +19,16 @@ namespace CryptoBot.TelegramBot.BotStates
         private readonly ICryptoService _cryptoService;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IStateFactory _stateFactory;
-
-        public WaitingForExchangeApiSecretState(ILogger<WaitingForExchangeApiSecretState> logger, TelegramBot telegramBot, ICryptoService cryptoService, IServiceScopeFactory serviceScopeFactory, IStateFactory stateFactory)
+        private readonly BybitApiClient _bybitApiClient;
+        
+        public WaitingForExchangeApiSecretState(ILogger<WaitingForExchangeApiSecretState> logger, TelegramBot telegramBot, ICryptoService cryptoService, IServiceScopeFactory serviceScopeFactory, IStateFactory stateFactory, BybitApiClient bybitApiClient)
         {
             _logger = logger;
             _telegramBot = telegramBot;
             _cryptoService = cryptoService;
             _serviceScopeFactory = serviceScopeFactory;
             _stateFactory = stateFactory;
+            _bybitApiClient = bybitApiClient;
         }
 
         public BotState BotState { get; set; } = BotState.WaitingForExchangeApiSecretState;
@@ -52,7 +55,7 @@ namespace CryptoBot.TelegramBot.BotStates
             var chat = await dbContext.Chats
                 .Include(chatEntity => chatEntity.SelectedAccount)
                 .ThenInclude(x => x.Exchange)
-                .FirstOrDefaultAsync(x => x.ChatId == chatId);
+                .FirstOrDefaultAsync(x => x.Id == chatId);
 
             chat.SelectedAccount.Exchange.EncryptedSecret = encryptedApiKey;
 
@@ -63,20 +66,15 @@ namespace CryptoBot.TelegramBot.BotStates
 
             var decryptedApiKey = await _cryptoService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
 
-            var bybitApi = new BybitRestClient
-            {
-                ClientOptions = { ApiCredentials = new ApiCredentials(decryptedApiKey, apiSecret) }
-            };
+            var apiCredentials = new ApiCredentials(decryptedApiKey, apiSecret);
 
-            var result = await bybitApi.SpotApiV3.Account.GetBalancesAsync();
+            var result = await _bybitApiClient.GetAccountBalance(apiCredentials);
 
-            if (result.Error != null)
+            if (result == null)
             {
                 await _telegramBot.SendDefaultMessageAsync("Вы ввели некорректные данные от аккаунта, попробуйте еще раз!", chatId);
-
-                return _stateFactory.CreateState(BotState.WaitingForSelectingExchange);
             }
-
+            
             await _telegramBot.SendDefaultMessageAsync(
                 $"Вы успешно добавили аккаунт биржи {chat.SelectedAccount.Exchange.Exchange}", chatId);
 

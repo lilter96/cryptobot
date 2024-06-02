@@ -1,8 +1,8 @@
 namespace CryptoBot.Data.Entities;
 
-public interface IEntity
+public interface IEntity<T>
 {
-    public Guid Id { get; init; }
+    public T Id { get; init; }
     
     public DateTime CreatedDate { get; set; }
     

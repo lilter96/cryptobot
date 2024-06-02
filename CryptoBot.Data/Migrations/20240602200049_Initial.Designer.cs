@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CryptoBot.Data.Migrations
 {
     [DbContext(typeof(CryptoBotDbContext))]
-    [Migration("20240531214950_AddExchanges")]
-    partial class AddExchanges
+    [Migration("20240602200049_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,8 +31,8 @@ namespace CryptoBot.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ChatId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<long>("ChatId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
@@ -55,15 +55,11 @@ namespace CryptoBot.Data.Migrations
 
             modelBuilder.Entity("CryptoBot.Data.Entities.ChatEntity", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("BotState")
                         .HasColumnType("int");
-
-                    b.Property<long>("ChatId")
-                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
@@ -71,13 +67,14 @@ namespace CryptoBot.Data.Migrations
                     b.Property<DateTime>("ModificationDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("SelectedAccountId")
+                    b.Property<Guid?>("SelectedAccountId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("SelectedAccountId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[SelectedAccountId] IS NOT NULL");
 
                     b.ToTable("Chats");
                 });
@@ -135,8 +132,7 @@ namespace CryptoBot.Data.Migrations
                     b.HasOne("CryptoBot.Data.Entities.AccountEntity", "SelectedAccount")
                         .WithOne()
                         .HasForeignKey("CryptoBot.Data.Entities.ChatEntity", "SelectedAccountId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("SelectedAccount");
                 });

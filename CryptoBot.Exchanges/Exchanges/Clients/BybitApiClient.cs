@@ -37,4 +37,25 @@ public class BybitApiClient
 
         return result.Data.List.Last().ClosePrice;
     }
+    
+    public async Task<decimal?> GetAccountBalance(ApiCredentials apiCredentials)
+    {
+        var restApiClient = new BybitRestClient(options =>
+        {
+            options.ApiCredentials = apiCredentials;
+        });
+
+        var result = await restApiClient.V5Api.Account.GetBalancesAsync(AccountType.Unified);
+
+        if (result.Error != null)
+        {
+            var errorMessage =
+                $"Something went wrong while receiving account balance. Error Message: {result.Error.Message}";
+            _logger.LogError(errorMessage);
+
+            throw new InvalidOperationException(errorMessage);
+        }
+
+        return result.Data.List.Last().TotalWalletBalance;
+    }
 }

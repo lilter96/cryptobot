@@ -51,7 +51,7 @@ public class WaitingForSymbolState : IBotState
             var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
 
             var chat = await dbContext.Chats.Include(chatEntity => chatEntity.SelectedAccount)
-                .ThenInclude(accountEntity => accountEntity.Exchange).FirstOrDefaultAsync(x => x.ChatId == chatId);
+                .ThenInclude(accountEntity => accountEntity.Exchange).FirstOrDefaultAsync(x => x.Id == chatId);
 
             if (chat.SelectedAccountId == null)
             {

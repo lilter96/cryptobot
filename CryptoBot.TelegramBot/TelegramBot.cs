@@ -61,22 +61,22 @@ public class TelegramBot
 
 
             var isChatNotExist = update?.Message?.Text == "/start" &&
-                                 await botDbContext.Chats.AllAsync(x => x.ChatId != chatId,
+                                 await botDbContext.Chats.AllAsync(x => x.Id != chatId,
                                      cancellationToken: cancellationToken);
 
             if (isChatNotExist)
             {
-                await botDbContext.AddAsync(new ChatEntity
+                botDbContext.Add(new ChatEntity
                 {
                     BotState = BotState.WaitingForCommand,
                     Accounts = [],
-                    ChatId = chatId
-                }, cancellationToken);
+                    Id = chatId
+                });
 
                 await botDbContext.SaveChangesAsync(cancellationToken);
             }
 
-            var chat = await botDbContext.Chats.FirstOrDefaultAsync(x => x.ChatId == chatId,
+            var chat = await botDbContext.Chats.FirstOrDefaultAsync(x => x.Id == chatId,
                 cancellationToken: cancellationToken);
 
             if (chat == null)
@@ -112,7 +112,7 @@ public class TelegramBot
         {
             var botDbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
 
-            var chat = await botDbContext.Chats.FirstOrDefaultAsync(x => x.ChatId == chatId,
+            var chat = await botDbContext.Chats.FirstOrDefaultAsync(x => x.Id == chatId,
                 cancellationToken: cancellationToken);
 
             currentBotState = newBotState ?? currentBotState;

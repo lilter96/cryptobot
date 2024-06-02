@@ -28,8 +28,8 @@ namespace CryptoBot.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ChatId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<long>("ChatId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
@@ -47,20 +47,16 @@ namespace CryptoBot.Data.Migrations
                     b.HasIndex("ExchangeId")
                         .IsUnique();
 
-                    b.ToTable("Accounts");
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("CryptoBot.Data.Entities.ChatEntity", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("BotState")
                         .HasColumnType("int");
-
-                    b.Property<long>("ChatId")
-                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
@@ -77,7 +73,7 @@ namespace CryptoBot.Data.Migrations
                         .IsUnique()
                         .HasFilter("[SelectedAccountId] IS NOT NULL");
 
-                    b.ToTable("Chats");
+                    b.ToTable("Chats", (string)null);
                 });
 
             modelBuilder.Entity("CryptoBot.Data.Entities.ExchangeEntity", b =>
@@ -106,7 +102,7 @@ namespace CryptoBot.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Exchanges");
+                    b.ToTable("Exchanges", (string)null);
                 });
 
             modelBuilder.Entity("CryptoBot.Data.Entities.AccountEntity", b =>
