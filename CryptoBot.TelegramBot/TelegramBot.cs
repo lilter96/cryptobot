@@ -1,4 +1,5 @@
-﻿using CryptoBot.Data;
+﻿using System.ComponentModel.DataAnnotations;
+using CryptoBot.Data;
 using CryptoBot.Data.Entities;
 using CryptoBot.TelegramBot.BotStates;
 using CryptoBot.TelegramBot.CommandDetectors;
@@ -57,7 +58,7 @@ public class TelegramBot
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         var chatId = update.GetChatId();
-        IBotState newBotState;
+        IBotState newBotState = null;
         IBotState currentBotState;
 
         using (var scope = _serviceScopeFactory.CreateScope())
@@ -65,41 +66,24 @@ public class TelegramBot
             var botDbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
             var stateFactory = scope.ServiceProvider.GetRequiredService<IStateFactory>();
 
-
-            var isChatNotExist = update?.Message?.Text == "/start" &&
-                                 await botDbContext.Chats.AllAsync(x => x.Id != chatId,
-                                     cancellationToken: cancellationToken);
-
-            if (isChatNotExist)
-            {
-                botDbContext.Add(new ChatEntity
-                {
-                    BotState = BotState.WaitingForCommand,
-                    Accounts = [],
-                    Id = chatId
-                });
-
-                await botDbContext.SaveChangesAsync(cancellationToken);
-
-                var keyboard = TelegramKeyboards.GetDefaultKeyboard(true);
-
-                await botClient.SendTextMessageAsync(
-                    chatId,
-                    "Доброго времени суток, с вами БОТ КРИПТОПАМПИКС!",
-                    replyMarkup: keyboard,
-                    cancellationToken: cancellationToken);
-            }
-
             var chat = await botDbContext.Chats.FirstOrDefaultAsync(x => x.Id == chatId,
                 cancellationToken: cancellationToken);
 
-            if (chat == null)
+            if (update.Message != null && chat == null && update.Message.Text != "/start")
             {
-                await SendDefaultMessageAsync("Для начала работы введите команду /start", chatId);
+                await BotClient.SendTextMessageAsync(
+                    chatId: chatId,
+                    text: "Для начала работы введите команду /start",
+                    replyMarkup: TelegramKeyboards.GetEmptyKeyboard(),
+                    cancellationToken: cancellationToken);
+                
                 return;
             }
-
-            currentBotState = stateFactory.CreateState(chat.BotState);
+            
+            currentBotState = stateFactory.CreateState(
+                update.Message is { Text: "/start" } 
+                ? BotState.WaitingForCommand 
+                : chat.BotState);
 
             try
             {
@@ -110,8 +94,7 @@ public class TelegramBot
 
                 if (update.CallbackQuery is { Message: not null })
                 {
-                    _logger.LogInformation(
-                        $"Received callback query from chat: {update.CallbackQuery.Message.Chat.Id}");
+                    _logger.LogInformation($"Received callback query from chat: {update.CallbackQuery.Message.Chat.Id}");
                 }
             }
             catch (Exception)
@@ -119,7 +102,18 @@ public class TelegramBot
                 // ignored
             }
 
-            newBotState = await currentBotState.HandleUpdateAsync(update);
+            try
+            {
+                newBotState = await currentBotState.HandleUpdateAsync(update);
+            }
+            catch (ValidationException)
+            {
+                await BotClient.SendTextMessageAsync(
+                    chatId: chatId,
+                    text: "Введена не верная команда",
+                    replyMarkup: TelegramKeyboards.GetDefaultKeyboard(true),
+                    cancellationToken: cancellationToken);
+            }
         }
 
         using (var scope = _serviceScopeFactory.CreateScope())

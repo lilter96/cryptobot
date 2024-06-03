@@ -1,9 +1,8 @@
-﻿namespace CryptoBot.TelegramBot.CommandDetectors
-{
-    public class CommandDescription
-    {
-        public string Command { get; set; }
+﻿namespace CryptoBot.TelegramBot.CommandDetectors;
 
-        public string Description { get; set; }
-    }
+public class CommandDescription
+{
+    public string Command { get; set; }
+
+    public string Description { get; set; }
 }

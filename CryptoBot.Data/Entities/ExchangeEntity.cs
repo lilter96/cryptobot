@@ -1,21 +1,20 @@
-﻿namespace CryptoBot.Data.Entities
+﻿namespace CryptoBot.Data.Entities;
+
+public class ExchangeEntity : IEntity<Guid>
 {
-    public class ExchangeEntity : IEntity<Guid>
-    {
-        public Guid Id { get; init; }
+    public Guid Id { get; init; }
 
-        public DateTime CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; }
 
-        public DateTime ModificationDate { get; set; }
+    public DateTime ModificationDate { get; set; }
 
-        public Exchange Exchange { get; set; }
+    public Exchange Exchange { get; set; }
 
-        public string EncryptedKey { get; set; }
+    public string EncryptedKey { get; set; }
 
-        public string EncryptedSecret { get; set; }
+    public string EncryptedSecret { get; set; }
 
-        public Guid AccountId { get; set; }
+    public Guid AccountId { get; set; }
 
-        public virtual AccountEntity Account { get; set; }
-    }
+    public virtual AccountEntity Account { get; set; }
 }

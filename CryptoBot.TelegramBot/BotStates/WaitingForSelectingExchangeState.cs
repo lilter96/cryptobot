@@ -4,108 +4,106 @@ using CryptoBot.TelegramBot.Keyboards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using static System.String;
 
-namespace CryptoBot.TelegramBot.BotStates
-{
-    public class WaitingForSelectingExchangeState : IBotState
-    {
-        private readonly IStateFactory _stateFactory;
-        private readonly ILogger<WaitingForSymbolState> _logger;
-        private readonly TelegramBot _telegramBot;
-        private readonly IServiceScopeFactory _serviceScopeFactory;
+namespace CryptoBot.TelegramBot.BotStates;
 
-        public WaitingForSelectingExchangeState(
-            IStateFactory stateFactory,
-            ILogger<WaitingForSymbolState> logger,
-            IServiceScopeFactory serviceScopeFactory,
-            TelegramBot telegramBot)
+public class WaitingForSelectingExchangeState : IBotState
+{
+    private readonly IStateFactory _stateFactory;
+    private readonly ILogger<WaitingForSymbolState> _logger;
+    private readonly TelegramBot _telegramBot;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
+    public WaitingForSelectingExchangeState(
+        IStateFactory stateFactory,
+        ILogger<WaitingForSymbolState> logger,
+        IServiceScopeFactory serviceScopeFactory,
+        TelegramBot telegramBot)
+    {
+        _stateFactory = stateFactory;
+        _logger = logger;
+        _serviceScopeFactory = serviceScopeFactory;
+        _telegramBot = telegramBot;
+    }
+
+    public BotState BotState { get; set; } = BotState.WaitingForSelectingExchange;
+
+    public async Task<IBotState> HandleUpdateAsync(Update update)
+    {
+        var message = update?.Message?.Text;
+
+        var chatId = update.GetChatId();
+
+        if (IsNullOrWhiteSpace(message))
         {
-            _stateFactory = stateFactory;
-            _logger = logger;
-            _serviceScopeFactory = serviceScopeFactory;
-            _telegramBot = telegramBot;
+            _logger.LogWarning("Empty message in update from Telegram");
+            await _telegramBot.SendDefaultMessageAsync("Некорректный ввод, попробуйте снова.", chatId);
+            return this;
         }
 
-        public BotState BotState { get; set; } = BotState.WaitingForSelectingExchange;
+        var isExchange = Enum.TryParse<Exchange>(message, true, out var exchange);
 
-        public async Task<IBotState> HandleUpdateAsync(Update update)
+        if (!isExchange)
         {
-            var message = update?.Message?.Text;
+            await _telegramBot.SendDefaultMessageAsync("Вы выбрали не поддерживаемую биржу!", chatId);
+            return await Task.FromResult((IBotState) null);
+        }
 
-            var chatId = update.GetChatId();
+        try
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
 
-            if (IsNullOrWhiteSpace(message))
+            var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
+
+            var chat = await dbContext.Chats.FirstOrDefaultAsync(x => x.Id == chatId);
+
+            AccountEntity editedAccount;
+            if (chat.SelectedAccountId == null)
             {
-                _logger.LogWarning("Empty message in update from Telegram");
-                await _telegramBot.SendDefaultMessageAsync("Некорректный ввод, попробуйте снова.", chatId);
-                return this;
-            }
+                var newAccountId = Guid.NewGuid();
 
-            var isExchange = Enum.TryParse<Exchange>(message, true, out var exchange);
-
-            if (!isExchange)
-            {
-                await _telegramBot.SendDefaultMessageAsync("Вы выбрали не поддерживаемую биржу!", chatId);
-                return await Task.FromResult((IBotState) null);
-            }
-
-            try
-            {
-                using var scope = _serviceScopeFactory.CreateScope();
-
-                var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
-
-                var chat = await dbContext.Chats.FirstOrDefaultAsync(x => x.Id == chatId);
-
-                AccountEntity editedAccount;
-                if (chat.SelectedAccountId == null)
+                editedAccount = new AccountEntity
                 {
-                    var newAccountId = Guid.NewGuid();
-
-                    editedAccount = new AccountEntity
+                    Id = newAccountId,
+                    ChatId = chat.Id,
+                    Exchange = new ExchangeEntity
                     {
-                        Id = newAccountId,
-                        ChatId = chat.Id,
-                        Exchange = new ExchangeEntity
-                        {
-                            Exchange = exchange,
-                            AccountId = newAccountId
-                        }
-                    };
+                        Exchange = exchange,
+                        AccountId = newAccountId
+                    }
+                };
 
-                    await dbContext.Accounts.AddAsync(editedAccount);
+                await dbContext.Accounts.AddAsync(editedAccount);
 
-                    chat.SelectedAccountId = editedAccount.Id;
-                    dbContext.Update(chat);
-                }
-                else
-                {
-                    editedAccount = await dbContext.Accounts
-                        .Include(accountEntity => accountEntity.Exchange)
-                        .FirstOrDefaultAsync(x => x.Id == chat.SelectedAccountId);
-
-                    editedAccount.Exchange.Exchange = exchange;
-
-                    dbContext.Update(editedAccount);
-                }
-
-                await dbContext.SaveChangesAsync();
-
-                await _telegramBot.SendDefaultMessageAsync(
-                    "Введите секретный API ключ! ВНИМАНИЕ: используйте ключ только для чтения",
-                    chatId,
-                    TelegramKeyboards.GetEmptyKeyboard());
-
-                return _stateFactory.CreateState(BotState.WaitingForExchangeApiKeyState);
+                chat.SelectedAccountId = editedAccount.Id;
+                dbContext.Update(chat);
             }
-            catch (Exception e)
+            else
             {
-                Console.WriteLine(e);
-                throw;
+                editedAccount = await dbContext.Accounts
+                    .Include(accountEntity => accountEntity.Exchange)
+                    .FirstOrDefaultAsync(x => x.Id == chat.SelectedAccountId);
+
+                editedAccount.Exchange.Exchange = exchange;
+
+                dbContext.Update(editedAccount);
             }
+
+            await dbContext.SaveChangesAsync();
+
+            await _telegramBot.SendDefaultMessageAsync(
+                "Введите секретный API ключ! ВНИМАНИЕ: используйте ключ только для чтения",
+                chatId,
+                TelegramKeyboards.GetEmptyKeyboard());
+
+            return _stateFactory.CreateState(BotState.WaitingForExchangeApiKeyState);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
     }
 }
