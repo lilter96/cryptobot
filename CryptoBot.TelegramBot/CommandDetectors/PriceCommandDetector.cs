@@ -1,5 +1,7 @@
 ﻿using CryptoBot.Data.Entities;
 using CryptoBot.TelegramBot.BotStates;
+using CryptoBot.TelegramBot.Keyboards;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.CommandDetectors;
@@ -26,7 +28,11 @@ public class PriceCommandDetector : ICommandDetector
 
         if (receivedTelegramMessage == null)
         {
-            await _telegramBot.SendDefaultMessageAsync("Вы сделали все что угодно, но не отправили мне комманду!", chatId);
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Вы сделали все что угодно, но не отправили мне комманду!",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+            
             return null;
         }
 
@@ -34,7 +40,10 @@ public class PriceCommandDetector : ICommandDetector
 
         if (text == CommandDescription.Command)
         {
-            await _telegramBot.SendDefaultMessageAsync("Выберите криптовалютную пару!", chatId);
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Выберите криптовалютную пару!",
+                replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
 
             return _stateFactory.CreateState(BotState.WaitingForSymbol);
         }

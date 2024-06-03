@@ -2,10 +2,12 @@
 using CryptoBot.Data.Entities;
 using CryptoBot.Exchanges.Exchanges.Clients;
 using CryptoBot.Service.Services.Interfaces;
+using CryptoBot.TelegramBot.Keyboards;
 using CryptoExchange.Net.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.BotStates;
@@ -40,7 +42,11 @@ public class WaitingForSymbolState : IBotState
         if (string.IsNullOrWhiteSpace(message))
         {
             _logger.LogWarning("Empty message in update from Telegram");
-            await _telegramBot.SendDefaultMessageAsync("Некорректный ввод, попробуйте снова.", chatId);
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Некорректный ввод, попробуйте снова.",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+            
             return this;
         }
 
@@ -55,7 +61,11 @@ public class WaitingForSymbolState : IBotState
 
             if (chat.SelectedAccountId == null)
             {
-                await _telegramBot.SendDefaultMessageAsync($"Не возможно просмотреть цену, вы не подключили ни одного аккаунта, либо не выбрали аккаунт", chatId);
+                await _telegramBot.BotClient.SendTextMessageAsync(
+                    chatId: chatId,
+                    text: "Не возможно просмотреть цену, вы не подключили ни одного аккаунта, либо не выбрали аккаунт",
+                    replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+                
                 return _stateFactory.CreateState(BotState.WaitingForCommand);
             }
 
@@ -65,19 +75,31 @@ public class WaitingForSymbolState : IBotState
             var apiCredentials = new ApiCredentials(decryptedKey, decryptedSecret);
 
             var result = await _bybitApiClient.GetLastTradedPrice(apiCredentials, message);
-            await _telegramBot.SendDefaultMessageAsync($"Последняя цена - {result}", chatId);
+            
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: $"Последняя цена - {result}",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+            
             return _stateFactory.CreateState(BotState.WaitingForCommand);
         }
         catch (InvalidOperationException)
         {
-            await _telegramBot.SendDefaultMessageAsync($"Выбранная вами криптовалютная пара {message} не поддерживается", chatId);
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: $"Выбранная вами криптовалютная пара {message} не поддерживается",
+                replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
+            
             return this;
         }
         catch (Exception ex)
         {
             _logger.LogError($"Something went wrong {ex.Message}");
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Внутренняя ошибка, попробуйте позже еще раз!",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
 
-            await _telegramBot.SendDefaultMessageAsync("Внутренняя ошибка, попробуйте позже еще раз!", chatId);
             return this;
         }
     }

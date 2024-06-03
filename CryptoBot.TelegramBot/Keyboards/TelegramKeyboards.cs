@@ -4,7 +4,7 @@ namespace CryptoBot.TelegramBot.Keyboards;
 
 public static class TelegramKeyboards
 {
-    public static ReplyKeyboardMarkup GetDefaultKeyboard(bool isOneTimeKeyBoard)
+    public static ReplyKeyboardMarkup GetDefaultKeyboard()
     {
         var buttons = new List<List<KeyboardButton>>
         {
@@ -18,7 +18,7 @@ public static class TelegramKeyboards
         var replyKeyboardMarkup = new ReplyKeyboardMarkup(buttons)
         {
             ResizeKeyboard = true,
-            OneTimeKeyboard = isOneTimeKeyBoard
+            OneTimeKeyboard = true
         };
 
         return replyKeyboardMarkup;

@@ -11,7 +11,6 @@ using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace CryptoBot.TelegramBot;
 
@@ -111,7 +110,7 @@ public class TelegramBot
                 await BotClient.SendTextMessageAsync(
                     chatId: chatId,
                     text: "Введена не верная команда",
-                    replyMarkup: TelegramKeyboards.GetDefaultKeyboard(true),
+                    replyMarkup: TelegramKeyboards.GetDefaultKeyboard(),
                     cancellationToken: cancellationToken);
             }
         }
@@ -144,15 +143,7 @@ public class TelegramBot
 
         return Task.CompletedTask;
     }
-
-    public async Task<Message> SendDefaultMessageAsync(string text, long chatId, ReplyKeyboardMarkup keyboard = null)
-    {
-        using var scope = _serviceScopeFactory.CreateScope();
-        var botClient = scope.ServiceProvider.GetRequiredService<ITelegramBotClient>();
-
-        return await botClient.SendTextMessageAsync(chatId, text, replyMarkup: keyboard);
-    }
-
+    
     private async Task SetDefaultCommandsAsync()
     {
         using var scope = _serviceScopeFactory.CreateScope();

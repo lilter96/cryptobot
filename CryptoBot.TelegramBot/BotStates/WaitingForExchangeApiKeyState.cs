@@ -1,6 +1,7 @@
 ﻿using CryptoBot.Data;
 using CryptoBot.Data.Entities;
 using CryptoBot.Service.Services.Interfaces;
+using CryptoBot.TelegramBot.Keyboards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -42,7 +43,11 @@ public class WaitingForExchangeApiKeyState : IBotState
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             _logger.LogWarning("Empty message in update from Telegram");
-            await _telegramBot.SendDefaultMessageAsync("Некорректный ввод, попробуйте снова.", chatId);
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Некорректный ввод, попробуйте снова.",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+            
             return this;
         }
 
@@ -62,7 +67,10 @@ public class WaitingForExchangeApiKeyState : IBotState
         await dbContext.SaveChangesAsync();
 
         await _telegramBot.BotClient.DeleteMessageAsync(chatId, update.Message.MessageId);
-        await _telegramBot.SendDefaultMessageAsync("Сообщение с API ключом удалено в целях вашей безопасности!", chatId);
+        await _telegramBot.BotClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: "Сообщение с API ключом удалено в целях вашей безопасности!",
+            replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
 
         return _stateFactory.CreateState(BotState.WaitingForExchangeApiSecretState);
     }

@@ -4,6 +4,7 @@ using CryptoBot.TelegramBot.Keyboards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using static System.String;
 
@@ -39,7 +40,11 @@ public class WaitingForSelectingExchangeState : IBotState
         if (IsNullOrWhiteSpace(message))
         {
             _logger.LogWarning("Empty message in update from Telegram");
-            await _telegramBot.SendDefaultMessageAsync("Некорректный ввод, попробуйте снова.", chatId);
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Некорректный ввод, попробуйте снова.",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+            
             return this;
         }
 
@@ -47,7 +52,11 @@ public class WaitingForSelectingExchangeState : IBotState
 
         if (!isExchange)
         {
-            await _telegramBot.SendDefaultMessageAsync("Вы выбрали не поддерживаемую биржу!", chatId);
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Вы выбрали не поддерживаемую биржу!",
+                replyMarkup: TelegramKeyboards.GetExchangeSelectingKeyboard(true));
+            
             return await Task.FromResult((IBotState) null);
         }
 
@@ -93,11 +102,11 @@ public class WaitingForSelectingExchangeState : IBotState
 
             await dbContext.SaveChangesAsync();
 
-            await _telegramBot.SendDefaultMessageAsync(
-                "Введите секретный API ключ! ВНИМАНИЕ: используйте ключ только для чтения",
-                chatId,
-                TelegramKeyboards.GetEmptyKeyboard());
-
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Введите секретный API ключ! ВНИМАНИЕ: используйте ключ только для чтения",
+                replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
+            
             return _stateFactory.CreateState(BotState.WaitingForExchangeApiKeyState);
         }
         catch (Exception e)

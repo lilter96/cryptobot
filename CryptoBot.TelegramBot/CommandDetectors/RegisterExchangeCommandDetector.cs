@@ -27,7 +27,11 @@ public class RegisterExchangeCommandDetector : ICommandDetector
 
         if (receivedTelegramMessage == null)
         {
-            await _telegramBot.SendDefaultMessageAsync("Вы сделали все что угодно, но не отправили мне комманду!", chatId);
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Вы сделали все что угодно, но не отправили мне комманду!",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+            
             return null;
         }
 

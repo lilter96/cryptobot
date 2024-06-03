@@ -2,6 +2,7 @@
 using CryptoBot.Data.Entities;
 using CryptoBot.Exchanges.Exchanges.Clients;
 using CryptoBot.Service.Services.Interfaces;
+using CryptoBot.TelegramBot.Keyboards;
 using CryptoExchange.Net.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,7 +42,11 @@ public class WaitingForExchangeApiSecretState : IBotState
         if (string.IsNullOrWhiteSpace(apiSecret))
         {
             _logger.LogWarning("Empty message in update from Telegram");
-            await _telegramBot.SendDefaultMessageAsync("Некорректный ввод, попробуйте снова.", chatId);
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Некорректный ввод, попробуйте снова.",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+            
             return this;
         }
 
@@ -61,8 +66,10 @@ public class WaitingForExchangeApiSecretState : IBotState
         await dbContext.SaveChangesAsync();
 
         await _telegramBot.BotClient.DeleteMessageAsync(chatId, update.Message.MessageId);
-        await _telegramBot.SendDefaultMessageAsync("Сообщение с API секретом удалено в целях вашей безопасности!",
-            chatId);
+        await _telegramBot.BotClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: "Сообщение с API секретом удалено в целях вашей безопасности!",
+            replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
 
         var decryptedApiKey = await _cryptoService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
 
@@ -72,18 +79,24 @@ public class WaitingForExchangeApiSecretState : IBotState
         {
             _ = await _bybitApiClient.GetLastTradedPrice(apiCredentials);
 
-            await _telegramBot.SendDefaultMessageAsync(
-                $"Вы успешно добавили аккаунт биржи {chat.SelectedAccount.Exchange.Exchange}", chatId);
-
-            var message = await _telegramBot.SendDefaultMessageAsync(
-                $"Текущий аккаунт: {chat.SelectedAccount.Exchange.Exchange.ToString()}, id: {chat.SelectedAccountId}", chatId);
-
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: $"Вы успешно добавили аккаунт биржи {chat.SelectedAccount.Exchange.Exchange}",
+                replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
+            
+            var message = await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: $"Текущий аккаунт: {chat.SelectedAccount.Exchange.Exchange.ToString()}, id: {chat.SelectedAccountId}",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+            
             await _telegramBot.BotClient.PinChatMessageAsync(chatId, message.MessageId, true);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            await _telegramBot.SendDefaultMessageAsync(
-                "Вы ввели некорректные данные от аккаунта, попробуйте еще раз!", chatId);
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: "Вы ввели некорректные данные от аккаунта, попробуйте еще раз!",
+                replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
         }
 
         return _stateFactory.CreateState(BotState.WaitingForCommand);

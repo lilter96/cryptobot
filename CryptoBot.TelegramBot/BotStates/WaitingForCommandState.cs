@@ -1,5 +1,7 @@
 ﻿using CryptoBot.Data.Entities;
 using CryptoBot.TelegramBot.CommandDetectors;
+using CryptoBot.TelegramBot.Keyboards;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.BotStates;
@@ -26,9 +28,11 @@ public class WaitingForCommandState : IBotState
 
         if (possibleNewBotState == null)
         {
-            await _telegramBot.SendDefaultMessageAsync(
-                "Неизвестная команда, попробуйте другую или введите команду /help", chatId);
-
+            await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text:  "Неизвестная команда, попробуйте другую или введите команду /help",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+            
             return this;
         }
 

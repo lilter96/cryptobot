@@ -57,12 +57,10 @@ public class StartCommandDetector : ICommandDetector
             await dbContext.SaveChangesAsync();
         }
         
-        var keyboard = TelegramKeyboards.GetDefaultKeyboard(true);
-        
         await _telegramBot.BotClient.SendTextMessageAsync(
-            chatId,
-            "Доброго времени суток, с вами БОТ КРИПТОПАМПИКС!",
-            replyMarkup: keyboard);
+            chatId: chatId,
+            text: "Доброго времени суток, с вами БОТ КРИПТОПАМПИКС!",
+            replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
         
         return _stateFactory.CreateState(BotState.WaitingForCommand);
     }
