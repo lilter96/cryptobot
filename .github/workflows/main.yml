@@ -44,32 +44,6 @@ jobs:
           sleep 30
 
       - name: Open URL
-        uses: actions/github-script@v4
-        with:
-          script: |
-            const https = require('https');
-
-            function checkUrl(url) {
-              return new Promise((resolve, reject) => {
-                https.get(url, (res) => {
-                  const { statusCode } = res;
-
-                  if (statusCode >= 200 && statusCode < 300) {
-                    resolve();
-                  } else {
-                    reject(new Error(`Request Failed. Status Code: ${statusCode}`));
-                  }
-
-                  res.resume();
-                }).on('error', (e) => {
-                  reject(e);
-                });
-              });
-            }
-
-            try {
-              await checkUrl('http://tirikgatsik-001-site1.etempurl.com/');
-              console.log('URL is accessible');
-            } catch (error) {
-              console.error(`Failed to open URL: ${error.message}`);
-            }
+        run: |
+          echo "Opening URL..."
+          curl -I http://tirikgatsik-001-site1.etempurl.com/
