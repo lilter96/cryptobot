@@ -5,6 +5,7 @@ on: [push]
 jobs:
   build_and_deploy:
     runs-on: windows-latest
+    environment: prod
     steps:
       - uses: actions/checkout@v1
 
