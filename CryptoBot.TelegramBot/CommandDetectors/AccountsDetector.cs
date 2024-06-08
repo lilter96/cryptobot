@@ -62,7 +62,7 @@ public class AccountsDetector : ICommandDetector
 
         for (var i = 0; i < accounts.Count; i++)
         {
-            replyText.Append($"{i + 1}. {accounts[i].Exchange.Exchange} - {accounts[i].Id}");
+            replyText.Append($"{i + 1}. {accounts[i].Exchange.Exchange} - {accounts[i].Id}\n");
         }
         
         await _telegramBot.BotClient.SendTextMessageAsync(
