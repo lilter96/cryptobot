@@ -37,3 +37,17 @@ jobs:
           server-username: 'tirikgatsik-001'
           server-password: ${{ secrets.SERVER_PASSWORD }}
           delete: 'false'
+
+      - name: Wait for 30 seconds
+        uses: actions/wait@v1
+        with:
+          time: 30s
+
+      - name: Open URL
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const response = await fetch('http://tirikgatsik-001-site1.etempurl.com/');
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
