@@ -39,9 +39,9 @@ jobs:
           delete: 'false'
 
       - name: Wait for 30 seconds
-        uses: actions/wait@v1
-        with:
-          time: 30s
+        run: |
+          echo "Waiting for 30 seconds..."
+          sleep 30
 
       - name: Open URL
         uses: actions/github-script@v4
