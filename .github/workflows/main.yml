@@ -5,6 +5,7 @@ on: [push]
 jobs:
   build_and_deploy:
     runs-on: windows-latest
+    environment: prod
     steps:
       - uses: actions/checkout@v1
 
@@ -28,7 +29,11 @@ jobs:
       - name: Deploy to Simply
         uses: jahbenjah/SmarterASP.NET-web-deploy@1.0.0.alpha.8
         with:
-          website-name: ${{ secrets.WEBSITE_NAME }}
-          server-computer-name: ${{ secrets.SERVER_COMPUTER_NAME }}
-          server-username: ${{ secrets.SERVER_USERNAME }}
+          website-name: 'tirikgatsik-001-site1'
+          source: './publish'
+          destination: ''
+          recycleApp: 'tirikgatsik-001-site1'
+          server-computer-name: 'https://win6145.site4now.net:8172'
+          server-username: 'tirikgatsik-001'
           server-password: ${{ secrets.SERVER_PASSWORD }}
+          delete: 'false'
