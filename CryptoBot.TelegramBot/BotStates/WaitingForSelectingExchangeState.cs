@@ -44,7 +44,7 @@ public class WaitingForSelectingExchangeState : IBotState
                 chatId: chatId,
                 text: "Некорректный ввод, попробуйте снова.",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
-            
+
             return this;
         }
 
@@ -56,7 +56,7 @@ public class WaitingForSelectingExchangeState : IBotState
                 chatId: chatId,
                 text: "Вы выбрали не поддерживаемую биржу!",
                 replyMarkup: TelegramKeyboards.GetExchangeSelectingKeyboard(true));
-            
+
             return await Task.FromResult((IBotState) null);
         }
 
@@ -68,37 +68,23 @@ public class WaitingForSelectingExchangeState : IBotState
 
             var chat = await dbContext.Chats.FirstOrDefaultAsync(x => x.Id == chatId);
 
-            AccountEntity editedAccount;
-            if (chat.SelectedAccountId == null)
-            {
-                var newAccountId = Guid.NewGuid();
+            var newAccountId = Guid.NewGuid();
 
-                editedAccount = new AccountEntity
+            var newAccount = new AccountEntity
+            {
+                Id = newAccountId,
+                ChatId = chat.Id,
+                Exchange = new ExchangeEntity
                 {
-                    Id = newAccountId,
-                    ChatId = chat.Id,
-                    Exchange = new ExchangeEntity
-                    {
-                        Exchange = exchange,
-                        AccountId = newAccountId
-                    }
-                };
+                    Exchange = exchange,
+                    AccountId = newAccountId
+                }
+            };
 
-                await dbContext.Accounts.AddAsync(editedAccount);
+            await dbContext.Accounts.AddAsync(newAccount);
 
-                chat.SelectedAccountId = editedAccount.Id;
-                dbContext.Update(chat);
-            }
-            else
-            {
-                editedAccount = await dbContext.Accounts
-                    .Include(accountEntity => accountEntity.Exchange)
-                    .FirstOrDefaultAsync(x => x.Id == chat.SelectedAccountId);
-
-                editedAccount.Exchange.Exchange = exchange;
-
-                dbContext.Update(editedAccount);
-            }
+            chat.SelectedAccountId = newAccount.Id;
+            dbContext.Update(chat);
 
             await dbContext.SaveChangesAsync();
 
@@ -106,7 +92,7 @@ public class WaitingForSelectingExchangeState : IBotState
                 chatId: chatId,
                 text: "Введите секретный API ключ! ВНИМАНИЕ: используйте ключ только для чтения",
                 replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
-            
+
             return _stateFactory.CreateState(BotState.WaitingForExchangeApiKeyState);
         }
         catch (Exception e)

@@ -46,7 +46,7 @@ public class WaitingForExchangeApiSecretState : IBotState
                 chatId: chatId,
                 text: "Некорректный ввод, попробуйте снова.",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
-            
+
             return this;
         }
 
@@ -83,12 +83,12 @@ public class WaitingForExchangeApiSecretState : IBotState
                 chatId: chatId,
                 text: $"Вы успешно добавили аккаунт биржи {chat.SelectedAccount.Exchange.Exchange}",
                 replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
-            
+
             var message = await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId: chatId,
                 text: $"Текущий аккаунт: {chat.SelectedAccount.Exchange.Exchange.ToString()}, id: {chat.SelectedAccountId}",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
-            
+
             await _telegramBot.BotClient.PinChatMessageAsync(chatId, message.MessageId, true);
         }
         catch (Exception)
@@ -97,6 +97,12 @@ public class WaitingForExchangeApiSecretState : IBotState
                 chatId: chatId,
                 text: "Вы ввели некорректные данные от аккаунта, попробуйте еще раз!",
                 replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
+
+            dbContext.Accounts.Remove(chat.SelectedAccount);
+
+            chat.SelectedAccountId = null;
+
+            await dbContext.SaveChangesAsync();
         }
 
         return _stateFactory.CreateState(BotState.WaitingForCommand);
