@@ -11,7 +11,7 @@ public static class TelegramKeyboards
             new()
             {
                 new KeyboardButton("Аккаунт"),
-                new KeyboardButton("Командны")
+                new KeyboardButton("Команды")
             }
         };
 
