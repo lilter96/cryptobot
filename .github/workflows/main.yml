@@ -46,4 +46,4 @@ jobs:
       - name: Open URL
         run: |
           echo "Opening URL..."
-          curl -I http://tirikgatsik-001-site1.etempurl.com/
+          curl -I -u 11180965:60-dayfreetrial http://tirikgatsik-001-site1.etempurl.com/
