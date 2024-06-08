@@ -7,9 +7,20 @@ using CryptoBot.TelegramBot;
 using CryptoBot.TelegramBot.BotStates;
 using CryptoBot.TelegramBot.CommandDetectors;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
 using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/app.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -47,6 +58,23 @@ builder.Services.AddTransient<ICryptoService, CryptoService>();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        var dbContext = services.GetRequiredService<CryptoBotDbContext>();
+        dbContext.Database.Migrate();
+        logger.LogInformation("Database successfully have been migrated.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -58,3 +86,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+Log.CloseAndFlush();
