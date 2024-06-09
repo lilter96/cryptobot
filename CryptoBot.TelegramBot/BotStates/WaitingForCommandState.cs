@@ -22,10 +22,15 @@ public class WaitingForCommandState : IBotState
 
     public async Task<IBotState> HandleUpdateAsync(Update update)
     {
+        if (update.Message?.From == null || update.Message.From.Id == _telegramBot.BotClient.BotId)
+        {
+            return this;
+        }
+        
         var possibleNewBotState = await _commandDetectorService.DetectCommand(update);
 
         var chatId = update.GetChatId();
-
+        
         if (possibleNewBotState == null)
         {
             await _telegramBot.BotClient.SendTextMessageAsync(

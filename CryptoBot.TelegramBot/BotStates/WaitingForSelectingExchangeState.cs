@@ -90,7 +90,7 @@ public class WaitingForSelectingExchangeState : IBotState
 
             await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId: chatId,
-                text: "Введите секретный API ключ! ВНИМАНИЕ: используйте ключ только для чтения",
+                text: "Введите API Key! ВНИМАНИЕ: используйте ключ только для чтения",
                 replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
 
             return _stateFactory.CreateState(BotState.WaitingForExchangeApiKeyState);

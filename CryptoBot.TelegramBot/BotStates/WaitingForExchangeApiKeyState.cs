@@ -65,13 +65,18 @@ public class WaitingForExchangeApiKeyState : IBotState
         chat.SelectedAccount.Exchange.EncryptedKey = encryptedApiKey;
 
         await dbContext.SaveChangesAsync();
-
+        
         await _telegramBot.BotClient.DeleteMessageAsync(chatId, update.Message.MessageId);
         await _telegramBot.BotClient.SendTextMessageAsync(
             chatId: chatId,
-            text: "Сообщение с API ключом удалено в целях вашей безопасности!",
+            text: "API Key принят.",
             replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
 
+        await _telegramBot.BotClient.SendTextMessageAsync(
+            chatId: chatId,
+            text: "Введите API Secret! ВНИМАНИЕ: используйте ключ только для чтения",
+            replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
+        
         return _stateFactory.CreateState(BotState.WaitingForExchangeApiSecretState);
     }
 }

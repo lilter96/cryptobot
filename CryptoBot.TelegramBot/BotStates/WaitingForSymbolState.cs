@@ -74,7 +74,7 @@ public class WaitingForSymbolState : IBotState
 
             var apiCredentials = new ApiCredentials(decryptedKey, decryptedSecret);
 
-            var result = await _bybitApiClient.GetLastTradedPrice(apiCredentials, message);
+            var result = await _bybitApiClient.GetLastTradedPriceAsync(apiCredentials, message);
             
             await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId: chatId,

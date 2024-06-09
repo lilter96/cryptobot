@@ -50,7 +50,7 @@ public class WaitingForExchangeApiSecretState : IBotState
             return this;
         }
 
-        var encryptedApiKey = await _cryptoService.EncryptAsync(apiSecret);
+        var encryptedSecretKey = await _cryptoService.EncryptAsync(apiSecret);
 
         using var scope = _serviceScopeFactory.CreateScope();
 
@@ -61,14 +61,14 @@ public class WaitingForExchangeApiSecretState : IBotState
             .ThenInclude(x => x.Exchange)
             .FirstOrDefaultAsync(x => x.Id == chatId);
 
-        chat.SelectedAccount.Exchange.EncryptedSecret = encryptedApiKey;
+        chat.SelectedAccount.Exchange.EncryptedSecret = encryptedSecretKey;
 
         await dbContext.SaveChangesAsync();
 
         await _telegramBot.BotClient.DeleteMessageAsync(chatId, update.Message.MessageId);
         await _telegramBot.BotClient.SendTextMessageAsync(
             chatId: chatId,
-            text: "Сообщение с API секретом удалено в целях вашей безопасности!",
+            text: "API Secret принят.",
             replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
 
         var decryptedApiKey = await _cryptoService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
@@ -77,7 +77,7 @@ public class WaitingForExchangeApiSecretState : IBotState
 
         try
         {
-            _ = await _bybitApiClient.GetLastTradedPrice(apiCredentials);
+            _ = await _bybitApiClient.GetFeeRateAsync(apiCredentials);
 
             await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId: chatId,
