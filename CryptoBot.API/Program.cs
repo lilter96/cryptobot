@@ -1,10 +1,9 @@
+using CryptoBot.API.Extensions;
 using CryptoBot.Data;
-using CryptoBot.Data.Entities;
 using CryptoBot.Exchanges.Exchanges.Clients;
 using CryptoBot.Service.Services.Implementations;
 using CryptoBot.Service.Services.Interfaces;
 using CryptoBot.TelegramBot;
-using CryptoBot.TelegramBot.BotStates;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.CommandDetectors.Service;
 using Microsoft.EntityFrameworkCore;
@@ -45,17 +44,13 @@ var detectorsTypes = AppDomain.CurrentDomain.GetAssemblies()
 foreach (var detector in detectorsTypes)
 {
     builder.Services.AddTransient(detector);
-}
-
-builder.Services.AddKeyedTransient<IBotState, WaitingForCommandState>(BotState.WaitingForCommand);
-builder.Services.AddKeyedTransient<IBotState, WaitingForSymbolState>(BotState.WaitingForSymbol);
-builder.Services.AddKeyedTransient<IBotState, WaitingForSelectingExchangeState>(BotState.WaitingForSelectingExchange);
-builder.Services.AddKeyedTransient<IBotState, WaitingForExchangeApiKeyState>(BotState.WaitingForExchangeApiKeyState);
-builder.Services.AddKeyedTransient<IBotState, WaitingForExchangeApiSecretState>(BotState.WaitingForExchangeApiSecretState);
-builder.Services.AddKeyedTransient<IBotState, WaitingForSelectingAccountState>(BotState.WaitingForSelectingAccount);
+};
 
 builder.Services.AddTransient<IStateFactory, StateFactory>();
 builder.Services.AddTransient<ICryptoService, CryptoService>();
+
+// Must be LAST!!!
+builder.Services.AddKeyedBotStates();
 
 var app = builder.Build();
 
