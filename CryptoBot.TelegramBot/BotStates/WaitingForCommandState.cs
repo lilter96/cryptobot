@@ -1,5 +1,6 @@
 ﻿using CryptoBot.Data.Entities;
-using CryptoBot.TelegramBot.CommandDetectors;
+using CryptoBot.TelegramBot.BotStates.Factory;
+using CryptoBot.TelegramBot.CommandDetectors.Service;
 using CryptoBot.TelegramBot.Keyboards;
 using Telegram.Bot;
 using Telegram.Bot.Types;

@@ -1,7 +1,8 @@
 using System.Text;
 using CryptoBot.Data;
 using CryptoBot.Data.Entities;
-using CryptoBot.TelegramBot.BotStates;
+using CryptoBot.TelegramBot.BotStates.Factory;
+using CryptoBot.TelegramBot.CommandDetectors.Service;
 using CryptoBot.TelegramBot.Keyboards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,14 +11,13 @@ using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.CommandDetectors;
 
-public class AccountsDetector : ICommandDetector
+public class AccountsCommand : ICommandDetector
 {
     private readonly IStateFactory _stateFactory;
     private readonly TelegramBot _telegramBot;
     private readonly IServiceScopeFactory _serviceScopeFactory;
-
     
-    public AccountsDetector(IStateFactory stateFactory, TelegramBot telegramBot, IServiceScopeFactory serviceScopeFactory)
+    public AccountsCommand(IStateFactory stateFactory, TelegramBot telegramBot, IServiceScopeFactory serviceScopeFactory)
     {
         _stateFactory = stateFactory;
         _telegramBot = telegramBot;

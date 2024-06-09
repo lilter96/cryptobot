@@ -1,4 +1,4 @@
-﻿namespace CryptoBot.TelegramBot.CommandDetectors;
+﻿namespace CryptoBot.TelegramBot.CommandDetectors.Service;
 
 public class CommandDescription
 {

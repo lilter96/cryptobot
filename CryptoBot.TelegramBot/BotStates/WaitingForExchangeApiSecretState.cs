@@ -2,6 +2,7 @@
 using CryptoBot.Data.Entities;
 using CryptoBot.Exchanges.Exchanges.Clients;
 using CryptoBot.Service.Services.Interfaces;
+using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.Keyboards;
 using CryptoExchange.Net.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -89,6 +90,7 @@ public class WaitingForExchangeApiSecretState : IBotState
                 text: $"Текущий аккаунт: {chat.SelectedAccount.Exchange.Exchange.ToString()}, id: {chat.SelectedAccountId}",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
 
+            await _telegramBot.BotClient.UnpinAllChatMessages(chatId);
             await _telegramBot.BotClient.PinChatMessageAsync(chatId, message.MessageId, true);
         }
         catch (Exception)

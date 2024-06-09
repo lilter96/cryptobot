@@ -1,4 +1,4 @@
-﻿using CryptoBot.Data;
+using CryptoBot.Data;
 using CryptoBot.Data.Entities;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.Keyboards;
@@ -7,38 +7,37 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using static System.String;
 
 namespace CryptoBot.TelegramBot.BotStates;
 
-public class WaitingForSelectingExchangeState : IBotState
+public class WaitingForSelectingAccountState : IBotState
 {
     private readonly IStateFactory _stateFactory;
     private readonly ILogger<WaitingForSymbolState> _logger;
     private readonly TelegramBot _telegramBot;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public WaitingForSelectingExchangeState(
+    public WaitingForSelectingAccountState(
         IStateFactory stateFactory,
-        ILogger<WaitingForSymbolState> logger,
-        IServiceScopeFactory serviceScopeFactory,
-        TelegramBot telegramBot)
+        ILogger<WaitingForSymbolState> logger, 
+        TelegramBot telegramBot,
+        IServiceScopeFactory serviceScopeFactory)
     {
         _stateFactory = stateFactory;
         _logger = logger;
-        _serviceScopeFactory = serviceScopeFactory;
         _telegramBot = telegramBot;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
-    public BotState BotState { get; set; } = BotState.WaitingForSelectingExchange;
-
+    public BotState BotState { get; set; } = BotState.WaitingForSelectingAccount;
+    
     public async Task<IBotState> HandleUpdateAsync(Update update)
     {
-        var message = update?.Message?.Text;
+        var callbackData = update?.CallbackQuery?.Data;
 
         var chatId = update.GetChatId();
 
-        if (IsNullOrWhiteSpace(message))
+        if (string.IsNullOrWhiteSpace(callbackData))
         {
             _logger.LogWarning("Empty message in update from Telegram");
             await _telegramBot.BotClient.SendTextMessageAsync(
@@ -49,13 +48,13 @@ public class WaitingForSelectingExchangeState : IBotState
             return this;
         }
 
-        var isExchange = Enum.TryParse<Exchange>(message, true, out var exchange);
+        var isGuid = Guid.TryParse(callbackData, out var guid);
 
-        if (!isExchange)
+        if (!isGuid)
         {
             await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId: chatId,
-                text: "Вы выбрали не поддерживаемую биржу!",
+                text: "Что-то пошло не так, попробуйте снова.",
                 replyMarkup: TelegramKeyboards.GetExchangeSelectingKeyboard(true));
 
             return await Task.FromResult((IBotState) null);
@@ -67,34 +66,32 @@ public class WaitingForSelectingExchangeState : IBotState
 
             var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
 
-            var chat = await dbContext.Chats.FirstOrDefaultAsync(x => x.Id == chatId);
+            var account = await dbContext.Accounts
+                .Include(accountEntity => accountEntity.Chat)
+                .Include(accountEntity => accountEntity.Exchange)
+                .FirstOrDefaultAsync(x =>
+                    x.Id == guid &&
+                    x.ChatId == chatId);
 
-            var newAccountId = Guid.NewGuid();
-
-            var newAccount = new AccountEntity
-            {
-                Id = newAccountId,
-                ChatId = chat.Id,
-                Exchange = new ExchangeEntity
-                {
-                    Exchange = exchange,
-                    AccountId = newAccountId
-                }
-            };
-
-            await dbContext.Accounts.AddAsync(newAccount);
-
-            chat.SelectedAccountId = newAccount.Id;
-            dbContext.Update(chat);
+            account.Chat.SelectedAccountId = account.Id;
+            dbContext.Update(account.Chat);
 
             await dbContext.SaveChangesAsync();
 
             await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId: chatId,
-                text: "Введите API Key! ВНИМАНИЕ: используйте ключ только для чтения",
-                replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
+                text: "Аккаунт успешно переключен.",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
 
-            return _stateFactory.CreateState(BotState.WaitingForExchangeApiKeyState);
+            var message = await _telegramBot.BotClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: $"Текущий аккаунт: {account.Chat.SelectedAccount.Exchange.Exchange.ToString()}, id: {account.Chat.SelectedAccountId}",
+                replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
+
+            await _telegramBot.BotClient.UnpinAllChatMessages(chatId);
+            await _telegramBot.BotClient.PinChatMessageAsync(chatId, message.MessageId, true);
+            
+            return _stateFactory.CreateState(BotState.WaitingForCommand);
         }
         catch (Exception e)
         {

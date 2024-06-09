@@ -5,7 +5,8 @@ using CryptoBot.Service.Services.Implementations;
 using CryptoBot.Service.Services.Interfaces;
 using CryptoBot.TelegramBot;
 using CryptoBot.TelegramBot.BotStates;
-using CryptoBot.TelegramBot.CommandDetectors;
+using CryptoBot.TelegramBot.BotStates.Factory;
+using CryptoBot.TelegramBot.CommandDetectors.Service;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
@@ -51,7 +52,7 @@ builder.Services.AddKeyedTransient<IBotState, WaitingForSymbolState>(BotState.Wa
 builder.Services.AddKeyedTransient<IBotState, WaitingForSelectingExchangeState>(BotState.WaitingForSelectingExchange);
 builder.Services.AddKeyedTransient<IBotState, WaitingForExchangeApiKeyState>(BotState.WaitingForExchangeApiKeyState);
 builder.Services.AddKeyedTransient<IBotState, WaitingForExchangeApiSecretState>(BotState.WaitingForExchangeApiSecretState);
-
+builder.Services.AddKeyedTransient<IBotState, WaitingForSelectingAccountState>(BotState.WaitingForSelectingAccount);
 
 builder.Services.AddTransient<IStateFactory, StateFactory>();
 builder.Services.AddTransient<ICryptoService, CryptoService>();

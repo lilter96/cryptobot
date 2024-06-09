@@ -2,6 +2,7 @@
 using CryptoBot.Data.Entities;
 using CryptoBot.Exchanges.Exchanges.Clients;
 using CryptoBot.Service.Services.Interfaces;
+using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.Keyboards;
 using CryptoExchange.Net.Authentication;
 using Microsoft.EntityFrameworkCore;

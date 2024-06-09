@@ -1,7 +1,7 @@
 ﻿using CryptoBot.Data.Entities;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CryptoBot.TelegramBot.BotStates;
+namespace CryptoBot.TelegramBot.BotStates.Factory;
 
 public class StateFactory : IStateFactory
 {

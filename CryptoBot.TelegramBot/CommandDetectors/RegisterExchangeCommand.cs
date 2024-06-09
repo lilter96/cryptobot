@@ -1,29 +1,29 @@
 ﻿using CryptoBot.Data.Entities;
-using CryptoBot.TelegramBot.BotStates;
+using CryptoBot.TelegramBot.BotStates.Factory;
+using CryptoBot.TelegramBot.CommandDetectors.Service;
 using CryptoBot.TelegramBot.Keyboards;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.CommandDetectors;
 
-public class PriceCommandDetector : ICommandDetector
+public class RegisterExchangeCommand : ICommandDetector
 {
     private readonly IStateFactory _stateFactory;
     private readonly TelegramBot _telegramBot;
-
-    public PriceCommandDetector(IStateFactory stateFactory, TelegramBot telegramBot)
+    
+    public RegisterExchangeCommand(IStateFactory stateFactory, TelegramBot telegramBot)
     {
         _stateFactory = stateFactory;
         _telegramBot = telegramBot;
     }
 
     public CommandDescription CommandDescription { get; } =
-        new() { Command = "/getprice", Description = "Получить текущую цену криптовалютной пары" };
+        new() { Command = "/addaccount", Description = "Добавить аккаунт биржи" };
 
     public async Task<IBotState> TryDetectCommand(Update receivedUpdate)
     {
         var receivedTelegramMessage = receivedUpdate.Message;
-
         var chatId = receivedUpdate.GetChatId();
 
         if (receivedTelegramMessage == null)
@@ -38,16 +38,18 @@ public class PriceCommandDetector : ICommandDetector
 
         var text = receivedTelegramMessage.Text;
 
-        if (text == CommandDescription.Command)
+        if (text != CommandDescription.Command)
         {
-            await _telegramBot.BotClient.SendTextMessageAsync(
-                chatId: chatId,
-                text: "Выберите криптовалютную пару!",
-                replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
-
-            return _stateFactory.CreateState(BotState.WaitingForSymbol);
+            return null;
         }
 
-        return null;
+        var keyboard = TelegramKeyboards.GetExchangeSelectingKeyboard(true);
+
+        await _telegramBot.BotClient.SendTextMessageAsync(
+            chatId,
+            "Выберите биржу из списка!",
+            replyMarkup: keyboard);
+
+        return _stateFactory.CreateState(BotState.WaitingForSelectingExchange);
     }
 }

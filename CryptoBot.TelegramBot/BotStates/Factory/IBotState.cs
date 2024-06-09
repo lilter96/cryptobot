@@ -1,7 +1,7 @@
 ﻿using CryptoBot.Data.Entities;
 using Telegram.Bot.Types;
 
-namespace CryptoBot.TelegramBot.BotStates;
+namespace CryptoBot.TelegramBot.BotStates.Factory;
 
 public interface IBotState
 {

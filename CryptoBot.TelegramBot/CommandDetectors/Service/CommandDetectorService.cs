@@ -1,8 +1,8 @@
-﻿using CryptoBot.TelegramBot.BotStates;
+﻿using CryptoBot.TelegramBot.BotStates.Factory;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 
-namespace CryptoBot.TelegramBot.CommandDetectors;
+namespace CryptoBot.TelegramBot.CommandDetectors.Service;
 
 public class CommandDetectorService
 {
@@ -14,7 +14,7 @@ public class CommandDetectorService
     {
         using var scope = serviceScopeFactory.CreateScope();
 
-        var detectorsTypes = typeof(PriceCommandDetector).Assembly
+        var detectorsTypes = typeof(PriceCommand).Assembly
             .GetTypes()
             .Where(x => !x.IsInterface && x.IsAssignableTo(typeof(ICommandDetector)))
             .ToList();

@@ -1,3 +1,4 @@
+using CryptoBot.Data.Entities;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace CryptoBot.TelegramBot.Keyboards;
@@ -51,4 +52,17 @@ public static class TelegramKeyboards
 
         return replyKeyboardMarkup;
     }
+    
+    public static InlineKeyboardMarkup GetSelectingAccountInlineKeyboard(List<AccountEntity> accounts)
+    {
+        var buttons = accounts
+            .Select(account => InlineKeyboardButton.WithCallbackData($"{account.Id}", account.Id.ToString()))
+            .Select(button => new[] { button })
+            .ToList();
+
+        var inlineKeyboard = new InlineKeyboardMarkup(buttons);
+    
+        return inlineKeyboard;
+    }
+
 }

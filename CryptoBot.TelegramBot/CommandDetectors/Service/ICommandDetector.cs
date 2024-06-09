@@ -1,7 +1,7 @@
-﻿using CryptoBot.TelegramBot.BotStates;
+﻿using CryptoBot.TelegramBot.BotStates.Factory;
 using Telegram.Bot.Types;
 
-namespace CryptoBot.TelegramBot.CommandDetectors;
+namespace CryptoBot.TelegramBot.CommandDetectors.Service;
 
 public interface ICommandDetector
 {

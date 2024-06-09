@@ -1,6 +1,6 @@
 ﻿using CryptoBot.Data.Entities;
 
-namespace CryptoBot.TelegramBot.BotStates;
+namespace CryptoBot.TelegramBot.BotStates.Factory;
 
 public interface IStateFactory
 {
