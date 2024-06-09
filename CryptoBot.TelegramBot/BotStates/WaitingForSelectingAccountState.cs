@@ -19,7 +19,7 @@ public class WaitingForSelectingAccountState : IBotState
 
     public WaitingForSelectingAccountState(
         IStateFactory stateFactory,
-        ILogger<WaitingForSymbolState> logger, 
+        ILogger<WaitingForSymbolState> logger,
         TelegramBot telegramBot,
         IServiceScopeFactory serviceScopeFactory)
     {
@@ -30,7 +30,7 @@ public class WaitingForSelectingAccountState : IBotState
     }
 
     public BotState BotState { get; set; } = BotState.WaitingForSelectingAccount;
-    
+
     public async Task<IBotState> HandleUpdateAsync(Update update)
     {
         var callbackData = update?.CallbackQuery?.Data;
@@ -90,12 +90,12 @@ public class WaitingForSelectingAccountState : IBotState
 
             await _telegramBot.BotClient.UnpinAllChatMessages(chatId);
             await _telegramBot.BotClient.PinChatMessageAsync(chatId, message.MessageId, true);
-            
+
             return _stateFactory.CreateState(BotState.WaitingForCommand);
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            _logger.LogError($"Something went wrong while selecting new current account. Error details: {e.Message}");
             throw;
         }
     }

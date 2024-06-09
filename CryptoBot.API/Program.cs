@@ -1,8 +1,7 @@
 using CryptoBot.API.Extensions;
 using CryptoBot.Data;
 using CryptoBot.Exchanges.Exchanges.Clients;
-using CryptoBot.Service.Services.Implementations;
-using CryptoBot.Service.Services.Interfaces;
+using CryptoBot.Service.Services.Cryptography;
 using CryptoBot.TelegramBot;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -29,7 +28,7 @@ builder.Services.AddDbContext<CryptoBotDbContext>(opt => opt.UseSqlServer(connec
 
 builder.Services.AddTransient<BybitApiClient>();
 
-builder.Services.AddTransient<ICryptoService, CryptoService>();
+builder.Services.AddTransient<ICryptographyService, CryptographyService>();
 
 builder.Services.AddTelegramBot(builder.Configuration);
 

@@ -1,23 +1,22 @@
 using System.Security.Cryptography;
 using System.Text;
-using CryptoBot.Service.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 
-namespace CryptoBot.Service.Services.Implementations;
+namespace CryptoBot.Service.Services.Cryptography;
 
-public class CryptoService : ICryptoService
+public class CryptographyService : ICryptographyService
 {
     private readonly byte[] _key;
     private readonly byte[] _iv;
 
-    public CryptoService(IConfiguration configuration)
+    public CryptographyService(IConfiguration configuration)
     {
         var cryptoSettings = configuration.GetSection("CryptoSettings");
-        
+
         _key = Encoding.UTF8.GetBytes(cryptoSettings["Key"]!);
         _iv = Encoding.UTF8.GetBytes(cryptoSettings["IV"]!);
     }
-    
+
     public async Task<string> EncryptAsync(string plainText)
     {
         if (string.IsNullOrEmpty(plainText))
@@ -26,14 +25,14 @@ public class CryptoService : ICryptoService
         }
 
         using var aesAlg = Aes.Create();
-        
+
         aesAlg.Key = _key;
         aesAlg.IV = _iv;
 
         var encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
         using var msEncrypt = new MemoryStream();
-        
+
         await using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
         await using (var swEncrypt = new StreamWriter(csEncrypt))
         {
@@ -59,11 +58,11 @@ public class CryptoService : ICryptoService
         var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
 
         using var msDecrypt = new MemoryStream(buffer);
-        
+
         await using var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
-        
+
         using var srDecrypt = new StreamReader(csDecrypt);
-        
+
         return await srDecrypt.ReadToEndAsync();
     }
 }

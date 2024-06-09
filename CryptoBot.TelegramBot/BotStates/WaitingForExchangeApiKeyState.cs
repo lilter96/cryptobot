@@ -1,6 +1,6 @@
 ﻿using CryptoBot.Data;
 using CryptoBot.Data.Entities;
-using CryptoBot.Service.Services.Interfaces;
+using CryptoBot.Service.Services.Cryptography;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.Keyboards;
 using Microsoft.EntityFrameworkCore;
@@ -15,20 +15,20 @@ public class WaitingForExchangeApiKeyState : IBotState
 {
     private readonly ILogger<WaitingForSymbolState> _logger;
     private readonly TelegramBot _telegramBot;
-    private readonly ICryptoService _cryptoService;
+    private readonly ICryptographyService _cryptographyService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IStateFactory _stateFactory;
 
     public WaitingForExchangeApiKeyState(
         ILogger<WaitingForSymbolState> logger,
         TelegramBot telegramBot,
-        ICryptoService cryptoService,
+        ICryptographyService cryptographyService,
         IServiceScopeFactory serviceScopeFactory,
         IStateFactory stateFactory)
     {
         _logger = logger;
         _telegramBot = telegramBot;
-        _cryptoService = cryptoService;
+        _cryptographyService = cryptographyService;
         _serviceScopeFactory = serviceScopeFactory;
         _stateFactory = stateFactory;
     }
@@ -52,7 +52,7 @@ public class WaitingForExchangeApiKeyState : IBotState
             return this;
         }
 
-        var encryptedApiKey = await _cryptoService.EncryptAsync(apiKey);
+        var encryptedApiKey = await _cryptographyService.EncryptAsync(apiKey);
 
         using var scope = _serviceScopeFactory.CreateScope();
 

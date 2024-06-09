@@ -1,6 +1,6 @@
-namespace CryptoBot.Service.Services.Interfaces;
+namespace CryptoBot.Service.Services.Cryptography;
 
-public interface ICryptoService
+public interface ICryptographyService
 {
     Task<string> EncryptAsync(string text);
 

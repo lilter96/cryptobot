@@ -1,7 +1,7 @@
 ﻿using CryptoBot.Data;
 using CryptoBot.Data.Entities;
 using CryptoBot.Exchanges.Exchanges.Clients;
-using CryptoBot.Service.Services.Interfaces;
+using CryptoBot.Service.Services.Cryptography;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.Keyboards;
 using CryptoExchange.Net.Authentication;
@@ -20,16 +20,16 @@ public class WaitingForSymbolState : IBotState
     private readonly ILogger<WaitingForSymbolState> _logger;
     private readonly TelegramBot _telegramBot;
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ICryptoService _cryptoService;
+    private readonly ICryptographyService _cryptographyService;
 
-    public WaitingForSymbolState(BybitApiClient bybitApiClient, IStateFactory stateFactory, ILogger<WaitingForSymbolState> logger, TelegramBot telegramBot, IServiceScopeFactory serviceScopeFactory, ICryptoService cryptoService)
+    public WaitingForSymbolState(BybitApiClient bybitApiClient, IStateFactory stateFactory, ILogger<WaitingForSymbolState> logger, TelegramBot telegramBot, IServiceScopeFactory serviceScopeFactory, ICryptographyService cryptographyService)
     {
         _bybitApiClient = bybitApiClient;
         _stateFactory = stateFactory;
         _logger = logger;
         _telegramBot = telegramBot;
         _serviceScopeFactory = serviceScopeFactory;
-        _cryptoService = cryptoService;
+        _cryptographyService = cryptographyService;
     }
 
     public BotState BotState { get; set; } = BotState.WaitingForSymbol;
@@ -70,8 +70,8 @@ public class WaitingForSymbolState : IBotState
                 return _stateFactory.CreateState(BotState.WaitingForCommand);
             }
 
-            var decryptedKey = await _cryptoService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
-            var decryptedSecret = await _cryptoService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedSecret);
+            var decryptedKey = await _cryptographyService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
+            var decryptedSecret = await _cryptographyService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedSecret);
 
             var apiCredentials = new ApiCredentials(decryptedKey, decryptedSecret);
 

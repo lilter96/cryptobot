@@ -9,11 +9,7 @@ public static class TelegramKeyboards
     {
         var buttons = new List<List<KeyboardButton>>
         {
-            new()
-            {
-                new KeyboardButton("Аккаунт"),
-                new KeyboardButton("Команды")
-            }
+            Capacity = 0
         };
 
         var replyKeyboardMarkup = new ReplyKeyboardMarkup(buttons)
@@ -35,16 +31,12 @@ public static class TelegramKeyboards
 
     public static ReplyKeyboardMarkup GetExchangeSelectingKeyboard(bool isOneTimeKeyBoard)
     {
-        var buttons = new List<List<KeyboardButton>>
-        {
-            new()
-            {
-                new KeyboardButton("Bybit"),
-                new KeyboardButton("Binance")
-            }
-        };
+        var buttons = Enum.GetValues(typeof(Exchange))
+            .Cast<Exchange>()
+            .Select(exchange => new KeyboardButton(exchange.ToString()))
+            .ToList();
 
-        var replyKeyboardMarkup = new ReplyKeyboardMarkup(buttons)
+        var replyKeyboardMarkup = new ReplyKeyboardMarkup(buttons.Select(keyboardButton => new List<KeyboardButton> { keyboardButton }))
         {
             ResizeKeyboard = true,
             OneTimeKeyboard = isOneTimeKeyBoard
@@ -52,16 +44,16 @@ public static class TelegramKeyboards
 
         return replyKeyboardMarkup;
     }
-    
+
     public static InlineKeyboardMarkup GetSelectingAccountInlineKeyboard(List<AccountEntity> accounts)
     {
         var buttons = accounts
-            .Select(account => InlineKeyboardButton.WithCallbackData($"{account.Id}", account.Id.ToString()))
+            .Select(account => InlineKeyboardButton.WithCallbackData($"{account.Exchange.Exchange.ToString()}-{account.Id.ToString()[..4]}", account.Id.ToString()))
             .Select(button => new[] { button })
             .ToList();
 
         var inlineKeyboard = new InlineKeyboardMarkup(buttons);
-    
+
         return inlineKeyboard;
     }
 

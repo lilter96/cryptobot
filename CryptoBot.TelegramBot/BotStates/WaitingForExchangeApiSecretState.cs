@@ -1,7 +1,7 @@
 ﻿using CryptoBot.Data;
 using CryptoBot.Data.Entities;
 using CryptoBot.Exchanges.Exchanges.Clients;
-using CryptoBot.Service.Services.Interfaces;
+using CryptoBot.Service.Services.Cryptography;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.Keyboards;
 using CryptoExchange.Net.Authentication;
@@ -17,16 +17,16 @@ public class WaitingForExchangeApiSecretState : IBotState
 {
     private readonly ILogger<WaitingForExchangeApiSecretState> _logger;
     private readonly TelegramBot _telegramBot;
-    private readonly ICryptoService _cryptoService;
+    private readonly ICryptographyService _cryptographyService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IStateFactory _stateFactory;
     private readonly BybitApiClient _bybitApiClient;
 
-    public WaitingForExchangeApiSecretState(ILogger<WaitingForExchangeApiSecretState> logger, TelegramBot telegramBot, ICryptoService cryptoService, IServiceScopeFactory serviceScopeFactory, IStateFactory stateFactory, BybitApiClient bybitApiClient)
+    public WaitingForExchangeApiSecretState(ILogger<WaitingForExchangeApiSecretState> logger, TelegramBot telegramBot, ICryptographyService cryptographyService, IServiceScopeFactory serviceScopeFactory, IStateFactory stateFactory, BybitApiClient bybitApiClient)
     {
         _logger = logger;
         _telegramBot = telegramBot;
-        _cryptoService = cryptoService;
+        _cryptographyService = cryptographyService;
         _serviceScopeFactory = serviceScopeFactory;
         _stateFactory = stateFactory;
         _bybitApiClient = bybitApiClient;
@@ -51,7 +51,7 @@ public class WaitingForExchangeApiSecretState : IBotState
             return this;
         }
 
-        var encryptedSecretKey = await _cryptoService.EncryptAsync(apiSecret);
+        var encryptedSecretKey = await _cryptographyService.EncryptAsync(apiSecret);
 
         using var scope = _serviceScopeFactory.CreateScope();
 
@@ -72,7 +72,7 @@ public class WaitingForExchangeApiSecretState : IBotState
             text: "API Secret принят.",
             replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
 
-        var decryptedApiKey = await _cryptoService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
+        var decryptedApiKey = await _cryptographyService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
 
         var apiCredentials = new ApiCredentials(decryptedApiKey, apiSecret);
 

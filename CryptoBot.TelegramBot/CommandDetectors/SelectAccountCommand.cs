@@ -24,7 +24,7 @@ public class SelectAccountCommand : ICommandDetector
     }
 
     public CommandDescription CommandDescription { get; } =
-        new() { Command = "/selectaccount", Description = "Выбрать текущий аккаунт" };
+        new() { Command = "/selectaccount", Description = "Выбрать рабочий аккаунт" };
 
     public async Task<IBotState> TryDetectCommand(Update receivedUpdate)
     {
@@ -38,21 +38,21 @@ public class SelectAccountCommand : ICommandDetector
                 chatId: chatId,
                 text: "Вы сделали все что угодно, но не отправили мне комманду!",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
-            
+
             return null;
         }
 
         var text = receivedTelegramMessage.Text;
 
         using var scope = _serviceScopeFactory.CreateScope();
-        
+
         var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
 
         var accounts = await dbContext.Accounts
             .Where(x => x.ChatId == receivedTelegramMessage.Chat.Id)
             .Include(accountEntity => accountEntity.Exchange)
             .ToListAsync();
-        
+
         if (text == CommandDescription.Command)
         {
             await _telegramBot.BotClient.SendTextMessageAsync(
