@@ -1,4 +1,6 @@
 ﻿using CryptoBot.TelegramBot.BotStates.Factory;
+using CryptoBot.TelegramBot.CommandDetectors.Service;
+using Telegram.Bot;
 
 namespace CryptoBot.API.Extensions
 {
@@ -35,6 +37,36 @@ namespace CryptoBot.API.Extensions
             {
                 services.Remove(descriptor);
             }
+
+            return services;
+        }
+
+        public static IServiceCollection AddCommandDetectors(this IServiceCollection services)
+        {
+            var detectorsTypes = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(s => s.GetTypes())
+                .Where(x => !x.IsInterface && x.IsAssignableTo(typeof(ICommandDetector)))
+                .ToList();
+
+            foreach (var detector in detectorsTypes)
+            {
+                services.AddTransient(detector);
+            }
+
+            return services;
+        }
+
+        public static IServiceCollection AddTelegramBot(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(configuration["TelegramBotConfiguration:TelegramBotToken"]!));
+            services.AddTransient<TelegramBot.TelegramBot>();
+
+            services.AddTransient<IStateFactory, StateFactory>();
+
+            services.AddSingleton<CommandDetectorService>();
+            services.AddCommandDetectors();
+
+            services.AddKeyedBotStates();
 
             return services;
         }

@@ -4,12 +4,9 @@ using CryptoBot.Exchanges.Exchanges.Clients;
 using CryptoBot.Service.Services.Implementations;
 using CryptoBot.Service.Services.Interfaces;
 using CryptoBot.TelegramBot;
-using CryptoBot.TelegramBot.BotStates.Factory;
-using CryptoBot.TelegramBot.CommandDetectors.Service;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
-using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,26 +28,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<CryptoBotDbContext>(opt => opt.UseSqlServer(connectionString));
 
 builder.Services.AddTransient<BybitApiClient>();
-builder.Services.AddSingleton<CommandDetectorService>();
 
-builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(builder.Configuration["TelegramBotConfiguration:TelegramBotToken"]!));
-builder.Services.AddTransient<TelegramBot>();
-
-var detectorsTypes = AppDomain.CurrentDomain.GetAssemblies()
-    .SelectMany(s => s.GetTypes())
-    .Where(x => !x.IsInterface && x.IsAssignableTo(typeof(ICommandDetector)))
-    .ToList();
-
-foreach (var detector in detectorsTypes)
-{
-    builder.Services.AddTransient(detector);
-};
-
-builder.Services.AddTransient<IStateFactory, StateFactory>();
 builder.Services.AddTransient<ICryptoService, CryptoService>();
 
-// Must be LAST!!!
-builder.Services.AddKeyedBotStates();
+builder.Services.AddTelegramBot(builder.Configuration);
 
 var app = builder.Build();
 
