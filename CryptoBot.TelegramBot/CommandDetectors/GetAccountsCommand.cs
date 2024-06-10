@@ -1,29 +1,34 @@
 using System.Text;
-using CryptoBot.Data;
-using CryptoBot.Data.Entities;
+using CryptoBot.Service.Services.Account;
+using CryptoBot.TelegramBot.BotStates;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.CommandDetectors.Service;
 using CryptoBot.TelegramBot.Keyboards;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.CommandDetectors;
 
-public class AccountsCommand : ICommandDetector
+public class GetAccountsCommand : ICommandDetector
 {
     private readonly IStateFactory _stateFactory;
     private readonly TelegramBot _telegramBot;
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    
-    public AccountsCommand(IStateFactory stateFactory, TelegramBot telegramBot, IServiceScopeFactory serviceScopeFactory)
+    private readonly IAccountService _accountService;
+
+    public GetAccountsCommand(
+        IStateFactory stateFactory,
+        TelegramBot telegramBot,
+        IServiceScopeFactory serviceScopeFactory,
+        IAccountService accountService)
     {
         _stateFactory = stateFactory;
         _telegramBot = telegramBot;
         _serviceScopeFactory = serviceScopeFactory;
+        _accountService = accountService;
     }
-    
+
     public CommandDescription CommandDescription { get; } =
         new() { Command = "/accounts", Description = "Подключенные аккаунты" };
 
@@ -38,7 +43,7 @@ public class AccountsCommand : ICommandDetector
                 chatId: chatId,
                 text: "Вы сделали все что угодно, но не отправили мне комманду!",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
-            
+
             return null;
         }
 
@@ -49,22 +54,16 @@ public class AccountsCommand : ICommandDetector
             return null;
         }
 
-        using var scope = _serviceScopeFactory.CreateScope();
 
-        var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
-
-        var accounts = await dbContext.Accounts
-            .Where(x => x.ChatId == receivedTelegramMessage.Chat.Id)
-            .Include(accountEntity => accountEntity.Exchange)
-            .ToListAsync();
+        var accounts = await _accountService.GetAccountsAsync(chatId, 10);
 
         var replyText = new StringBuilder("Подключенные аккаунты:\n");
 
         for (var i = 0; i < accounts.Count; i++)
         {
-            replyText.Append($"{i + 1}. {accounts[i].Exchange.Exchange} - {accounts[i].Id}\n");
+            replyText.Append($"{i + 1}. {accounts[i].Exchange} - {accounts[i].Id}\n");
         }
-        
+
         await _telegramBot.BotClient.SendTextMessageAsync(
             chatId,
             replyText.ToString(),

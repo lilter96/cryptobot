@@ -1,9 +1,7 @@
-﻿using CryptoBot.Data;
-using CryptoBot.Data.Entities;
+﻿using CryptoBot.Service.Services.Account;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.Keyboards;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -16,18 +14,18 @@ public class WaitingForSelectingExchangeState : IBotState
     private readonly IStateFactory _stateFactory;
     private readonly ILogger<WaitingForSymbolState> _logger;
     private readonly TelegramBot _telegramBot;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IAccountService _accountService;
 
     public WaitingForSelectingExchangeState(
         IStateFactory stateFactory,
         ILogger<WaitingForSymbolState> logger,
-        IServiceScopeFactory serviceScopeFactory,
-        TelegramBot telegramBot)
+        TelegramBot telegramBot,
+        IAccountService accountService)
     {
         _stateFactory = stateFactory;
         _logger = logger;
-        _serviceScopeFactory = serviceScopeFactory;
         _telegramBot = telegramBot;
+        _accountService = accountService;
     }
 
     public BotState BotState { get; set; } = BotState.WaitingForSelectingExchange;
@@ -49,45 +47,12 @@ public class WaitingForSelectingExchangeState : IBotState
             return this;
         }
 
-        var isExchange = Enum.TryParse<Exchange>(message, true, out var exchange);
-
-        if (!isExchange)
-        {
-            await _telegramBot.BotClient.SendTextMessageAsync(
-                chatId: chatId,
-                text: "Вы выбрали не поддерживаемую биржу!",
-                replyMarkup: TelegramKeyboards.GetExchangeSelectingKeyboard(true));
-
-            return await Task.FromResult((IBotState) null);
-        }
-
         try
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            var patchDocument = new JsonPatchDocument();
+            patchDocument.Replace("/Exchange", message);
 
-            var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
-
-            var chat = await dbContext.Chats.FirstOrDefaultAsync(x => x.Id == chatId);
-
-            var newAccountId = Guid.NewGuid();
-
-            var newAccount = new AccountEntity
-            {
-                Id = newAccountId,
-                ChatId = chat.Id,
-                Exchange = new ExchangeEntity
-                {
-                    Exchange = exchange,
-                    AccountId = newAccountId
-                }
-            };
-
-            await dbContext.Accounts.AddAsync(newAccount);
-
-            chat.SelectedAccountId = newAccount.Id;
-            dbContext.Update(chat);
-
-            await dbContext.SaveChangesAsync();
+            await _accountService.PatchSelectedAccountAsync(chatId, patchDocument);
 
             await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId: chatId,

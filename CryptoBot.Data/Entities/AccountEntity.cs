@@ -12,7 +12,11 @@ public class AccountEntity : IEntity<Guid>
 
     public ChatEntity Chat { get; init; }
 
-    public Guid ExchangeId { get; set; }
+    public Exchange Exchange { get; set; }
 
-    public ExchangeEntity Exchange { get; set; }
+    public string EncryptedApiKey { get; set; }
+
+    public string EncryptedApiSecret { get; set; }
+
+    public string EncryptedApiPassPhrase { get; set;  }
 }

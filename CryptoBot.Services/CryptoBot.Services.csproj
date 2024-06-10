@@ -7,7 +7,18 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="AutoMapper" Version="13.0.1" />
+      <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.6" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Models\Chat\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\CryptoBot.Data\CryptoBot.Data.csproj" />
+      <ProjectReference Include="..\CryptoBot.Exchanges\CryptoBot.Exchanges.csproj" />
     </ItemGroup>
 
 </Project>

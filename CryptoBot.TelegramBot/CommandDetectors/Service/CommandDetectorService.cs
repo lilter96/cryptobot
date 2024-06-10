@@ -10,10 +10,8 @@ public class CommandDetectorService
 
     public readonly List<CommandDescription> AllCommands = [];
 
-    public CommandDetectorService(IServiceScopeFactory serviceScopeFactory)
+    public CommandDetectorService(IServiceProvider serviceProvider)
     {
-        using var scope = serviceScopeFactory.CreateScope();
-
         var detectorsTypes = typeof(PriceCommand).Assembly
             .GetTypes()
             .Where(x => !x.IsInterface && x.IsAssignableTo(typeof(ICommandDetector)))
@@ -21,7 +19,7 @@ public class CommandDetectorService
 
         foreach (var detectorType in detectorsTypes)
         {
-            if (scope.ServiceProvider.GetRequiredService(detectorType) is not ICommandDetector detector)
+            if (serviceProvider.GetRequiredService(detectorType) is not ICommandDetector detector)
             {
                 continue;
             }

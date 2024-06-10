@@ -1,4 +1,6 @@
-﻿using CryptoBot.Data.Entities;
+﻿using CryptoBot.Service.Services.Account;
+using CryptoBot.Service.Services.ExchangeApi;
+using CryptoBot.TelegramBot.BotStates;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.CommandDetectors.Service;
 using CryptoBot.TelegramBot.Keyboards;
@@ -7,15 +9,23 @@ using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.CommandDetectors;
 
-public class RegisterExchangeCommand : ICommandDetector
+public class CreateAccountCommand : ICommandDetector
 {
     private readonly IStateFactory _stateFactory;
     private readonly TelegramBot _telegramBot;
-    
-    public RegisterExchangeCommand(IStateFactory stateFactory, TelegramBot telegramBot)
+    private readonly IAccountService _accountService;
+    private readonly IExchangeApiService _exchangeApiService;
+
+    public CreateAccountCommand(
+        IStateFactory stateFactory,
+        TelegramBot telegramBot,
+        IAccountService accountService,
+        IExchangeApiService exchangeApiService)
     {
         _stateFactory = stateFactory;
         _telegramBot = telegramBot;
+        _accountService = accountService;
+        _exchangeApiService = exchangeApiService;
     }
 
     public CommandDescription CommandDescription { get; } =
@@ -32,7 +42,7 @@ public class RegisterExchangeCommand : ICommandDetector
                 chatId: chatId,
                 text: "Вы сделали все что угодно, но не отправили мне комманду!",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
-            
+
             return null;
         }
 
@@ -43,7 +53,9 @@ public class RegisterExchangeCommand : ICommandDetector
             return null;
         }
 
-        var keyboard = TelegramKeyboards.GetExchangeSelectingKeyboard(true);
+        await _accountService.CreateAccountAndSelectItAsync(chatId);
+
+        var keyboard = TelegramKeyboards.GetExchangeSelectingKeyboard(_exchangeApiService.GetExchangeNames());
 
         await _telegramBot.BotClient.SendTextMessageAsync(
             chatId,

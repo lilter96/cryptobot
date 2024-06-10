@@ -1,20 +1,18 @@
-﻿using CryptoBot.Data.Entities;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace CryptoBot.TelegramBot.BotStates.Factory;
 
 public class StateFactory : IStateFactory
 {
-    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IServiceProvider _serviceProvider;
 
-    public StateFactory(IServiceScopeFactory serviceScopeFactory)
+    public StateFactory(IServiceProvider serviceProvider)
     {
-        _serviceScopeFactory = serviceScopeFactory;
+        _serviceProvider = serviceProvider;
     }
 
     public IBotState CreateState(BotState state)
     {
-        using var scope = _serviceScopeFactory.CreateScope();
-        return scope.ServiceProvider.GetRequiredKeyedService<IBotState>(state);
+        return _serviceProvider.GetRequiredKeyedService<IBotState>(state);
     }
 }

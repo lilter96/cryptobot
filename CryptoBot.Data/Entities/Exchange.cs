@@ -4,4 +4,5 @@ public enum Exchange
 {
     Bybit,
     Binance,
+    OKX,
 }

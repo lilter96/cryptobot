@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CryptoBot.Exchanges.Exchanges.Clients;
 
-public class BybitApiClient
+public class BybitApiClient : IExchangeApiClient<ApiCredentials>
 {
     private readonly ILogger<BybitApiClient> _logger;
 
@@ -28,7 +28,7 @@ public class BybitApiClient
         if (result.Error != null || !result.Success)
         {
             var errorMessage =
-                $"Something went wrong while receiving Last Traded Price for symbol {symbol}. Error Message: {result.Error.Message}";
+                $"Something went wrong while receiving Last Traded Price for symbol {symbol}. Error Message: {result.Error?.Message}";
             _logger.LogError(errorMessage);
 
             throw new InvalidOperationException(errorMessage);
@@ -36,22 +36,20 @@ public class BybitApiClient
 
         return result.Data.List.Last().ClosePrice;
     }
-    
-    public async Task<decimal> GetFeeRateAsync(ApiCredentials apiCredentials, string symbol = "BTCUSDT")
+
+    public async Task<decimal> GetFeeRateAsync(ApiCredentials apiCredentials)
     {
         var restApiClient = new BybitRestClient(options =>
         {
             options.ApiCredentials = apiCredentials;
         });
 
-        var date = DateTime.UtcNow;
-
         var result = await restApiClient.V5Api.Account.GetFeeRateAsync(Category.Spot);
 
         if (result.Error != null || !result.Success)
         {
             var errorMessage =
-                $"Something went wrong while receiving Last Traded Price for symbol {symbol}. Error Message: {result.Error.Message}";
+                $"Something went wrong while receiving trading fees. Error Message: {result.Error?.Message}";
             _logger.LogError(errorMessage);
 
             throw new InvalidOperationException(errorMessage);

@@ -1,4 +1,4 @@
-using CryptoBot.Data.Entities;
+using CryptoBot.Service.Models.Account;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace CryptoBot.TelegramBot.Keyboards;
@@ -29,11 +29,10 @@ public static class TelegramKeyboards
         return replyKeyboardMarkup;
     }
 
-    public static ReplyKeyboardMarkup GetExchangeSelectingKeyboard(bool isOneTimeKeyBoard)
+    public static ReplyKeyboardMarkup GetExchangeSelectingKeyboard(List<string> exchangeNames, bool isOneTimeKeyBoard = true)
     {
-        var buttons = Enum.GetValues(typeof(Exchange))
-            .Cast<Exchange>()
-            .Select(exchange => new KeyboardButton(exchange.ToString()))
+        var buttons = exchangeNames
+            .Select(exchangeName => new KeyboardButton(exchangeName))
             .ToList();
 
         var replyKeyboardMarkup = new ReplyKeyboardMarkup(buttons.Select(keyboardButton => new List<KeyboardButton> { keyboardButton }))
@@ -45,10 +44,10 @@ public static class TelegramKeyboards
         return replyKeyboardMarkup;
     }
 
-    public static InlineKeyboardMarkup GetSelectingAccountInlineKeyboard(List<AccountEntity> accounts)
+    public static InlineKeyboardMarkup GetSelectingAccountInlineKeyboard(List<AccountModel> accounts)
     {
         var buttons = accounts
-            .Select(account => InlineKeyboardButton.WithCallbackData($"{account.Exchange.Exchange.ToString()}-{account.Id.ToString()[..4]}", account.Id.ToString()))
+            .Select(account => InlineKeyboardButton.WithCallbackData($"{account.Exchange.ToString()}-{account.Id.ToString()[..4]}", account.Id.ToString()))
             .Select(button => new[] { button })
             .ToList();
 
@@ -56,5 +55,4 @@ public static class TelegramKeyboards
 
         return inlineKeyboard;
     }
-
 }

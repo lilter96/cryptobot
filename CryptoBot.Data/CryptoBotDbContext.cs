@@ -9,8 +9,6 @@ public class CryptoBotDbContext : DbContext
 
     public virtual DbSet<ChatEntity> Chats { get; init; }
 
-    public virtual DbSet<ExchangeEntity> Exchanges { get; init; }
-
     public CryptoBotDbContext(DbContextOptions<CryptoBotDbContext> opt) : base(opt) { }
 
     public CryptoBotDbContext() { }
@@ -28,12 +26,6 @@ public class CryptoBotDbContext : DbContext
             .WithOne()
             .HasForeignKey<ChatEntity>(c => c.SelectedAccountId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<ExchangeEntity>()
-            .HasOne(x => x.Account)
-            .WithOne(x => x.Exchange)
-            .HasForeignKey<AccountEntity>(x => x.ExchangeId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 
     public override int SaveChanges()

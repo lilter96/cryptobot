@@ -1,12 +1,9 @@
-﻿using CryptoBot.Data;
-using CryptoBot.Data.Entities;
-using CryptoBot.Exchanges.Exchanges.Clients;
+﻿using CryptoBot.Service.Services.Account;
 using CryptoBot.Service.Services.Cryptography;
+using CryptoBot.Service.Services.ExchangeApi;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.Keyboards;
-using CryptoExchange.Net.Authentication;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -18,18 +15,24 @@ public class WaitingForExchangeApiSecretState : IBotState
     private readonly ILogger<WaitingForExchangeApiSecretState> _logger;
     private readonly TelegramBot _telegramBot;
     private readonly ICryptographyService _cryptographyService;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IStateFactory _stateFactory;
-    private readonly BybitApiClient _bybitApiClient;
+    private readonly IExchangeApiService _exchangeApiService;
+    private readonly IAccountService _accountService;
 
-    public WaitingForExchangeApiSecretState(ILogger<WaitingForExchangeApiSecretState> logger, TelegramBot telegramBot, ICryptographyService cryptographyService, IServiceScopeFactory serviceScopeFactory, IStateFactory stateFactory, BybitApiClient bybitApiClient)
+    public WaitingForExchangeApiSecretState(
+        ILogger<WaitingForExchangeApiSecretState> logger,
+        TelegramBot telegramBot,
+        ICryptographyService cryptographyService,
+        IStateFactory stateFactory,
+        IExchangeApiService exchangeApiService,
+        IAccountService accountService)
     {
         _logger = logger;
         _telegramBot = telegramBot;
         _cryptographyService = cryptographyService;
-        _serviceScopeFactory = serviceScopeFactory;
         _stateFactory = stateFactory;
-        _bybitApiClient = bybitApiClient;
+        _exchangeApiService = exchangeApiService;
+        _accountService = accountService;
     }
 
     public BotState BotState { get; set; } = BotState.WaitingForExchangeApiSecretState;
@@ -53,18 +56,10 @@ public class WaitingForExchangeApiSecretState : IBotState
 
         var encryptedSecretKey = await _cryptographyService.EncryptAsync(apiSecret);
 
-        using var scope = _serviceScopeFactory.CreateScope();
+        var patchDocument = new JsonPatchDocument();
+        patchDocument.Replace("/EncryptedApiSecret", encryptedSecretKey);
 
-        var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
-
-        var chat = await dbContext.Chats
-            .Include(chatEntity => chatEntity.SelectedAccount)
-            .ThenInclude(x => x.Exchange)
-            .FirstOrDefaultAsync(x => x.Id == chatId);
-
-        chat.SelectedAccount.Exchange.EncryptedSecret = encryptedSecretKey;
-
-        await dbContext.SaveChangesAsync();
+        await _accountService.PatchSelectedAccountAsync(chatId, patchDocument);
 
         await _telegramBot.BotClient.DeleteMessageAsync(chatId, update.Message.MessageId);
         await _telegramBot.BotClient.SendTextMessageAsync(
@@ -72,22 +67,20 @@ public class WaitingForExchangeApiSecretState : IBotState
             text: "API Secret принят.",
             replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
 
-        var decryptedApiKey = await _cryptographyService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
-
-        var apiCredentials = new ApiCredentials(decryptedApiKey, apiSecret);
+        var selectedAccount = await _accountService.GetSelectedAccountAsync(chatId);
 
         try
         {
-            _ = await _bybitApiClient.GetFeeRateAsync(apiCredentials);
+            await _exchangeApiService.PingAsync(chatId);
 
             await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId: chatId,
-                text: $"Вы успешно добавили аккаунт биржи {chat.SelectedAccount.Exchange.Exchange}",
+                text: $"Вы успешно добавили аккаунт биржи {selectedAccount.Exchange}",
                 replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
 
             var message = await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId: chatId,
-                text: $"Текущий аккаунт: {chat.SelectedAccount.Exchange.Exchange.ToString()}, id: {chat.SelectedAccountId}",
+                text: $"Текущий аккаунт: {selectedAccount.Exchange}, id: {selectedAccount.Id}",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
 
             await _telegramBot.BotClient.UnpinAllChatMessages(chatId);
@@ -100,11 +93,7 @@ public class WaitingForExchangeApiSecretState : IBotState
                 text: "Вы ввели некорректные данные от аккаунта, попробуйте еще раз!",
                 replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
 
-            dbContext.Accounts.Remove(chat.SelectedAccount);
-
-            chat.SelectedAccountId = null;
-
-            await dbContext.SaveChangesAsync();
+            await _accountService.DeleteSelectedAccountAsync(chatId);
         }
 
         return _stateFactory.CreateState(BotState.WaitingForCommand);

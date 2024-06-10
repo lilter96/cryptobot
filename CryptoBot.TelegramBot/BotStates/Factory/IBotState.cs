@@ -1,5 +1,4 @@
-﻿using CryptoBot.Data.Entities;
-using Telegram.Bot.Types;
+﻿using Telegram.Bot.Types;
 
 namespace CryptoBot.TelegramBot.BotStates.Factory;
 

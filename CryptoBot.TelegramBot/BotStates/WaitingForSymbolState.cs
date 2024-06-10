@@ -1,12 +1,6 @@
-﻿using CryptoBot.Data;
-using CryptoBot.Data.Entities;
-using CryptoBot.Exchanges.Exchanges.Clients;
-using CryptoBot.Service.Services.Cryptography;
+﻿using CryptoBot.Service.Services.ExchangeApi;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.Keyboards;
-using CryptoExchange.Net.Authentication;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -15,21 +9,21 @@ namespace CryptoBot.TelegramBot.BotStates;
 
 public class WaitingForSymbolState : IBotState
 {
-    private readonly BybitApiClient _bybitApiClient;
+    private readonly IExchangeApiService _exchangeApiService;
     private readonly IStateFactory _stateFactory;
     private readonly ILogger<WaitingForSymbolState> _logger;
     private readonly TelegramBot _telegramBot;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ICryptographyService _cryptographyService;
 
-    public WaitingForSymbolState(BybitApiClient bybitApiClient, IStateFactory stateFactory, ILogger<WaitingForSymbolState> logger, TelegramBot telegramBot, IServiceScopeFactory serviceScopeFactory, ICryptographyService cryptographyService)
+    public WaitingForSymbolState(
+        IExchangeApiService exchangeApiService,
+        IStateFactory stateFactory,
+        ILogger<WaitingForSymbolState> logger,
+        TelegramBot telegramBot)
     {
-        _bybitApiClient = bybitApiClient;
+        _exchangeApiService = exchangeApiService;
         _stateFactory = stateFactory;
         _logger = logger;
         _telegramBot = telegramBot;
-        _serviceScopeFactory = serviceScopeFactory;
-        _cryptographyService = cryptographyService;
     }
 
     public BotState BotState { get; set; } = BotState.WaitingForSymbol;
@@ -47,41 +41,19 @@ public class WaitingForSymbolState : IBotState
                 chatId: chatId,
                 text: "Некорректный ввод, попробуйте снова.",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
-            
+
             return this;
         }
 
         try
         {
-            await using var scope = _serviceScopeFactory.CreateAsyncScope();
+            var result = await _exchangeApiService.GetSymbolPrice(chatId, message);
 
-            var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
-
-            var chat = await dbContext.Chats.Include(chatEntity => chatEntity.SelectedAccount)
-                .ThenInclude(accountEntity => accountEntity.Exchange).FirstOrDefaultAsync(x => x.Id == chatId);
-
-            if (chat.SelectedAccountId == null)
-            {
-                await _telegramBot.BotClient.SendTextMessageAsync(
-                    chatId: chatId,
-                    text: "Не возможно просмотреть цену, вы не подключили ни одного аккаунта, либо не выбрали аккаунт",
-                    replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
-                
-                return _stateFactory.CreateState(BotState.WaitingForCommand);
-            }
-
-            var decryptedKey = await _cryptographyService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedKey);
-            var decryptedSecret = await _cryptographyService.DecryptAsync(chat.SelectedAccount.Exchange.EncryptedSecret);
-
-            var apiCredentials = new ApiCredentials(decryptedKey, decryptedSecret);
-
-            var result = await _bybitApiClient.GetLastTradedPriceAsync(apiCredentials, message);
-            
             await _telegramBot.BotClient.SendTextMessageAsync(
                 chatId: chatId,
                 text: $"Последняя цена - {result}",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
-            
+
             return _stateFactory.CreateState(BotState.WaitingForCommand);
         }
         catch (InvalidOperationException)
@@ -90,7 +62,7 @@ public class WaitingForSymbolState : IBotState
                 chatId: chatId,
                 text: $"Выбранная вами криптовалютная пара {message} не поддерживается",
                 replyMarkup: TelegramKeyboards.GetEmptyKeyboard());
-            
+
             return this;
         }
         catch (Exception ex)

@@ -1,4 +1,4 @@
-﻿using CryptoBot.Data.Entities;
+﻿using CryptoBot.TelegramBot.BotStates;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.CommandDetectors.Service;
 using CryptoBot.TelegramBot.Keyboards;
@@ -33,7 +33,7 @@ public class PriceCommand : ICommandDetector
                 chatId: chatId,
                 text: "Вы сделали все что угодно, но не отправили мне комманду!",
                 replyMarkup: TelegramKeyboards.GetDefaultKeyboard());
-            
+
             return null;
         }
 

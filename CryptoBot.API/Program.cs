@@ -1,9 +1,16 @@
 using CryptoBot.API.Extensions;
 using CryptoBot.Data;
+using CryptoBot.Data.Entities;
+using CryptoBot.Exchanges;
 using CryptoBot.Exchanges.Exchanges.Clients;
+using CryptoBot.Service.Services.Account;
+using CryptoBot.Service.Services.Chat;
 using CryptoBot.Service.Services.Cryptography;
+using CryptoBot.Service.Services.ExchangeApi;
 using CryptoBot.TelegramBot;
+using CryptoExchange.Net.Authentication;
 using Microsoft.EntityFrameworkCore;
+using OKX.Net.Objects;
 using Serilog;
 using Serilog.Events;
 
@@ -24,12 +31,18 @@ builder.Services.AddSwaggerGen();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<CryptoBotDbContext>(opt => opt.UseSqlServer(connectionString));
+builder.Services.AddDbContext<CryptoBotDbContext>(opt => opt.UseSqlServer(connectionString), ServiceLifetime.Transient);
 
 builder.Services.AddTransient<BybitApiClient>();
 
 builder.Services.AddTransient<ICryptographyService, CryptographyService>();
+builder.Services.AddTransient<IAccountService, AccountService>();
+builder.Services.AddTransient<IChatService, ChatService>();
+builder.Services.AddTransient<IExchangeApiService, ExchangeApiService>();
 
+
+builder.Services.AddKeyedTransient<IExchangeApiClient<ApiCredentials>, BybitApiClient>(Exchange.Bybit);
+builder.Services.AddKeyedTransient<IExchangeApiClient<OKXApiCredentials>, OKXApiClient>(Exchange.OKX);
 builder.Services.AddTelegramBot(builder.Configuration);
 
 var app = builder.Build();

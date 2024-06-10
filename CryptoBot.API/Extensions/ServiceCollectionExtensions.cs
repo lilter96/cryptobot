@@ -63,7 +63,7 @@ namespace CryptoBot.API.Extensions
 
             services.AddTransient<IStateFactory, StateFactory>();
 
-            services.AddSingleton<CommandDetectorService>();
+            services.AddTransient<CommandDetectorService>();
             services.AddCommandDetectors();
 
             services.AddKeyedBotStates();

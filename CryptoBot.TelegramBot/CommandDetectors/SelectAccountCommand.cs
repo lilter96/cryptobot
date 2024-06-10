@@ -1,10 +1,8 @@
-using CryptoBot.Data;
-using CryptoBot.Data.Entities;
+using CryptoBot.Service.Services.Account;
+using CryptoBot.TelegramBot.BotStates;
 using CryptoBot.TelegramBot.BotStates.Factory;
 using CryptoBot.TelegramBot.CommandDetectors.Service;
 using CryptoBot.TelegramBot.Keyboards;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -14,13 +12,16 @@ public class SelectAccountCommand : ICommandDetector
 {
     private readonly IStateFactory _stateFactory;
     private readonly TelegramBot _telegramBot;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IAccountService _accountService;
 
-    public SelectAccountCommand(IStateFactory stateFactory, TelegramBot telegramBot, IServiceScopeFactory serviceScopeFactory)
+    public SelectAccountCommand(
+        IStateFactory stateFactory,
+        TelegramBot telegramBot,
+        IAccountService accountService)
     {
         _stateFactory = stateFactory;
         _telegramBot = telegramBot;
-        _serviceScopeFactory = serviceScopeFactory;
+        _accountService = accountService;
     }
 
     public CommandDescription CommandDescription { get; } =
@@ -44,14 +45,7 @@ public class SelectAccountCommand : ICommandDetector
 
         var text = receivedTelegramMessage.Text;
 
-        using var scope = _serviceScopeFactory.CreateScope();
-
-        var dbContext = scope.ServiceProvider.GetRequiredService<CryptoBotDbContext>();
-
-        var accounts = await dbContext.Accounts
-            .Where(x => x.ChatId == receivedTelegramMessage.Chat.Id)
-            .Include(accountEntity => accountEntity.Exchange)
-            .ToListAsync();
+        var accounts = await _accountService.GetAccountsAsync(chatId, 10);
 
         if (text == CommandDescription.Command)
         {

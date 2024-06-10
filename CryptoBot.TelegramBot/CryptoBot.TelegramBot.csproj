@@ -13,15 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CryptoBot.Data\CryptoBot.Data.csproj" />
-      <ProjectReference Include="..\CryptoBot.Exchanges\CryptoBot.Exchanges.csproj" />
       <ProjectReference Include="..\CryptoBot.Services\CryptoBot.Services.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Microsoft.AspNetCore.Http.Abstractions">
-        <HintPath>C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\8.0.4\Microsoft.AspNetCore.Http.Abstractions.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
 </Project>
